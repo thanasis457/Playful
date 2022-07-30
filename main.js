@@ -9,6 +9,7 @@ const url = require("url");
 const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
+const uri_port = sensitive.uri_port;
 
 const scope = [
   "user-read-currently-playing",
@@ -133,7 +134,7 @@ async function startServer() {
   return new Promise((resolve) => {
     const express = require("express");
     const server = express();
-    const port = 8080;
+    const port = uri_port;
     let instance = null;
 
     server.get("/", (req, res) => {
