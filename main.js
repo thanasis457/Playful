@@ -253,12 +253,12 @@ async function getCurrentSong() {
         // console.log(res);
         // console.log(res.data.item);
         tray.setTitle(
-          (res.data.item?.name.length > 14
-            ? res.data.item?.name.substr(0, 12) + ".. - "
-            : res.data.item?.name + " - ") +
-            (res.data.item?.artists[0].name.length > 9
-              ? res.data.item?.artists[0].name.substr(0, 7) + ".."
-              : res.data.item?.artists[0].name)
+          (res.data.item.name.length > 15
+            ? res.data.item.name.substr(0, 13) + ".. - "
+            : res.data.item.name + " - ") +
+            (res.data.item.artists[0].name.length > 10
+              ? res.data.item.artists[0].name.substr(0, 8) + ".."
+              : res.data.item.artists[0].name)
         );
       })
       .catch((err) => {
