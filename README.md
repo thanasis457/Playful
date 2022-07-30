@@ -2,9 +2,13 @@
 
 A simple, clean, cross-platform application that displays the current song on the Menu Bar. Works only with Spotify.
 
+## Screenshots
+![](https://i.imgur.com/YCuOYKk.png)
+![Imgur](https://i.imgur.com/6DzXP2Y.png)
+
 ## Installing
 
-The easiest way to get running it to head to Releases and download the package for your platform.
+The easiest way to get running is to head to Releases and download the package for your platform.
 
 ### For reference:
 
