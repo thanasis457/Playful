@@ -1,5 +1,6 @@
 {
   "client_id": "YOUR_CLIENT_ID",
   "client_secret": "YOUR_CLIENT_SECRET",
-  "redirect_uri": "YOUR_CLIENT_REDIRECT_URI"
+  "redirect_uri": "http://localhost:8080/",
+  "uri_port": 8080
 }
