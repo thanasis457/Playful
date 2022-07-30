@@ -1,4 +1,4 @@
-# <img src="icons/app.png" align="left" width="100" height="100"/> Playful for Spotify
+# <img src="icons/app.png" align="left" width="114"/> Playful for Spotify
 
 A simple, clean, cross-platform application that displays the current song on the Menu Bar. Works only with Spotify.
 
