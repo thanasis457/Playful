@@ -29,7 +29,8 @@
   "config": {
     "forge": {
       "packagerConfig": {
-        "asar": true
+        "asar": true,
+        "icon": "icons/app"
       },
       "makers": [
         {
@@ -45,13 +46,6 @@
             "linux",
             "windows"
           ]
-        },
-        {
-          "name": "@electron-forge/maker-dmg",
-          "platforms": [
-            "darwin"
-          ],
-          "config": {}
         },
         {
           "name": "@electron-forge/maker-deb",

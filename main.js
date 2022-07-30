@@ -10,7 +10,6 @@ const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
 
-
 const scope = [
   "user-read-currently-playing",
   "user-read-playback-state",
@@ -30,15 +29,27 @@ let mounted = false;
 
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-  });
-  if (!mounted) {
-    mounted = true;
-    getCode(mainWindow);
+  if (process.platform === "linux") {
+    const mainWindow = new BrowserWindow({
+      icon: "icons/app.png",
+      width: 800,
+      height: 600,
+    });
+    if (!mounted) {
+      mounted = true;
+      getCode(mainWindow);
+    }
+  } else {
+    const mainWindow = new BrowserWindow({
+      icon: "icons/app.png",
+      width: 800,
+      height: 600,
+    });
+    if (!mounted) {
+      mounted = true;
+      getCode(mainWindow);
+    }
   }
-  // and load the index.html of the app.
 };
 
 app.on("window-all-closed", async () => {
