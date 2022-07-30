@@ -85,7 +85,7 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
-  let trayIcon = nativeImage.createFromPath(iconPath);
+  let trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 20, height: 20 });
   tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
     {
