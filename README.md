@@ -1,6 +1,6 @@
 # <img src="icons/app.png" align="left" width="114"/> Playful for Spotify
 
-A simple, clean, cross-platform application that displays the current song on the Menu Bar. Works only with Spotify.
+A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
 ## Screenshots
 ![](https://i.imgur.com/3NfLPaD.png)
@@ -14,9 +14,6 @@ The easiest way to get running is to head to Releases and download the package f
 
 MacOS Intel (x64): Playful-darwin-x64-[version].zip  
 MacOS Apple Silicon (arm64): Playful-darwin-arm64-[version].zip  
-Windows: Playful-windows-x64-[version]  
-Linux (RPM): Playful-linux-x64-[version].rpm  
-Linux (DEB): Playful-linux-x64-[version].deb
 
 ## Running from source
 
@@ -46,7 +43,9 @@ Now time to run the app
 
 ### Notes
 
-Running from source requires you to set up your own Spotify App for security reasons.
+- Running from source requires you to set up your own Spotify App for security reasons.
 Installing from the prepackaged releases, however, works fully out-of-the-box.
 
-The App icons are not mine. They are provided by Icons8 and can be found [here](https://icons8.com/icon/116726/spotify)
+- The App icons are not mine. They are provided by Icons8 and can be found [here](https://icons8.com/icon/116726/spotify)
+
+- Support for Linux/Windows: This app is actually ready to build for Linux and Windows environments. However, neither provide an easy way to access the system's menu bar/tray and set text (to show the current song). They only allow the showing of icons. Should I find any way to go around this I'll update the project.
