@@ -6,6 +6,9 @@ A simple, clean, MacOS application that displays the current song on the Menu Ba
 ![](https://i.imgur.com/3NfLPaD.png)
 ![Imgur](https://i.imgur.com/THuPqgc.png)
 
+### Playful-Py is a lighter reimplementation you might want to check out
+Playful is an ElectronJS app, not the fastest or lightest of the bunch. Playful-Py is a complete rewrite of the app written in Python and with focus on efficiency. If interested head to https://github.com/thanasis457/PlayfulPy
+
 ## Installing
 
 The easiest way to get running is to head to Releases and download the package for your platform.
@@ -13,7 +16,7 @@ The easiest way to get running is to head to Releases and download the package f
 ### For reference:
 
 MacOS Intel (x64): Playful-darwin-x64-[version].zip  
-MacOS Apple Silicon (arm64): Playful-darwin-arm64-[version].zip  
+MacOS Apple Silicon (arm64): Playful-darwin-arm64-[version].zip (ARM no longer supported since I do not longer own an ARM equipped Mac. You can build your own distributable though using the instructions provided)
 
 ## Running from source
 
