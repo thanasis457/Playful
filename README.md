@@ -8,7 +8,7 @@ A simple, clean, MacOS application that displays the current song on the Menu Ba
 
 ## Installing
 
-The easiest way to get running is to head to Releases and download the package for your platform.  
+The easiest way to get running is to head to [Releases](https://github.com/thanasis457/Playful/releases) and download the package for your platform.  
 Currently, only MacOS x86 is supported. (You can compile for Apple Silicon yourself. Instructions below)
 
 ## Development
