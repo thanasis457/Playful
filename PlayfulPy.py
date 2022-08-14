@@ -43,6 +43,9 @@ def formatTitle(song, artist, length):
                 artist_edited = artist[0:(40-len(song)-2)]+'..'
             else:
                 song_edited = song[0:(40-len(artist)-2)]+'..'
+        
+        if(artist_edited==''):
+            return song_edited
         return song_edited + " - " + artist_edited
     else:
         song_edited=song
@@ -55,6 +58,8 @@ def formatTitle(song, artist, length):
                 artist_edited = artist[0:(26-len(song)-2)]+'..'
             else:
                 song_edited = song[0:(26-len(artist)-2)]+'..'
+        if(artist_edited==''):
+            return song_edited
         return song_edited + " - " + artist_edited
 
 def Server(q):
@@ -72,7 +77,7 @@ def Server(q):
             return "<p>Everything is set up! You can now close your window.</p>"
         app.run(host='localhost', port=config['PlayfulPy']['uri_port'])
 
-def getAccessToken():
+def getAccessToken(callback=None):
     # print("Getting access token")
     res = requests.post("https://accounts.spotify.com/api/token", headers={
         "Content-Type": "application/x-www-form-urlencoded",
@@ -94,8 +99,10 @@ def getAccessToken():
     global timer_thread
     timer_thread = threading.Timer(res['expires_in'], getRefreshToken)
     timer_thread.start()
+    if(callback!=None):
+        callback()
 
-def getRefreshToken():
+def getRefreshToken(callback=None):
     # print("Getting refresh token")
     global timer_thread
     if(timer_thread != None):
@@ -120,8 +127,10 @@ def getRefreshToken():
     access_token=res['access_token']
     timer_thread = threading.Timer(res['expires_in'], getRefreshToken)
     timer_thread.start()
+    if(callback!=None):
+        callback()
 
-def getCode():
+def getCode(callback=None):
     q = Queue()
     p = Process(target=Server, args = (q,))
     try:
@@ -143,28 +152,29 @@ def getCode():
             else:
                 break
         webbrowser.open(('''https://accounts.spotify.com/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope={scope}''').format(client_id=client_id, redirect_uri=redirect_uri, scope=",".join(scope)))
-        
-        global code
-        code = q.get(block=True)
-        p.terminate()
+        print('waiting')
+        def waitCode():
+            global code
+            code = q.get(block=True, timeout=50)
+            p.terminate()
+            getAccessToken(callback)
+        threading.Thread(target=waitCode).start()
     except Exception as e:
         p.terminate()
         raise e
 
-def handleSignIn():
+def handleSignIn(callback=None):
     try:
         if(refresh_token==None):
             print("handling server")
-            getCode()
-            getAccessToken()
+            getCode(callback)
         else:
             try:
-                getRefreshToken()
+                getRefreshToken(callback)
             except Exception as e:
                 print(e)
                 print("handling server")
-                getCode()
-                getAccessToken()
+                getCode(callback)
         PlayfulPy.source = 'connect'
         # global timer_thread
         # timer_thread = threading.Thread(timer, target=getRefreshToken)
@@ -217,9 +227,10 @@ class PlayfulPy(rumps.App):
                 if(PlayfulPy.source=='connect'):
                     # Same as self.spotify_connect()
                     try:
-                        handleSignIn()
-                        self.icon='icons/spotify_connect.png'
-                        self.menu.get('Options').get('Source').get('Spotify Connect (Experimental)').state = 1
+                        def updateConnect():
+                            self.icon='icons/spotify_connect.png'
+                            self.menu.get('Options').get('Source').get('Spotify Connect (Experimental)').state = 1
+                        handleSignIn(updateConnect)
                     except:
                         PlayfulPy.source = 'spotify'
                         self.menu.get('Options').get('Source').get('Spotify App').state = 1
@@ -227,9 +238,13 @@ class PlayfulPy(rumps.App):
                     self.menu.get('Options').get('Source').get('Spotify App').state = 1
         except:
             pass
-    
-    @rumps.timer(2)
-    def refresh_title(self, _):
+        self.refresh_title()
+
+    @rumps.timer(1)
+    def update_title(self, _):
+        self.title = formatTitle(PlayfulPy.current_song[0], PlayfulPy.current_song[1], PlayfulPy.length)
+
+    def refresh_title(self):
         # print(PlayfulPy.source)
         # print(PlayfulPy.current_song)
         if(PlayfulPy.source=='spotify'):
@@ -244,15 +259,12 @@ class PlayfulPy(rumps.App):
                         if(PlayfulPy.send_notification==True):
                             rumps.notification(title=track[0], message=track[1], subtitle="", sound = False)
                         PlayfulPy.current_song=track.copy()
-                        self.title = formatTitle(track[0], track[1], PlayfulPy.length)
                         
                 except Exception as e:
-                    PlayfulPy.current_song = ['', '']
-                    self.title = "Error"
-                    # print(e)
+                    PlayfulPy.current_song = ['Error', '']
+                    print(e)
             else:
-                PlayfulPy.current_song = ['', '']
-                self.title = "Open Spotify"
+                PlayfulPy.current_song = ['Open Spotify', '']
         else:
             try:
                 track = getCurrentTrack(access_token)
@@ -260,12 +272,11 @@ class PlayfulPy(rumps.App):
                     if(PlayfulPy.send_notification==True):
                         rumps.notification(title=track[0], message=track[1], subtitle="", sound = False)
                     PlayfulPy.current_song=track.copy()
-                    self.title = formatTitle(track[0], track[1], PlayfulPy.length)
 
             except Exception as e:
-                PlayfulPy.current_song = ['', '']
-                self.title = "Error"
+                PlayfulPy.current_song = ['Error', '']
                 print(e)
+        threading.Timer(1, self.refresh_title).start()
 
     @rumps.clicked("Play / Pause")
     def toggle(self, _):
@@ -320,14 +331,16 @@ class PlayfulPy(rumps.App):
     @rumps.clicked("Options", "Source", "Spotify Connect (Experimental)")
     def spotify_connect(self, sender):
         try:
-            handleSignIn()
-            self.icon='icons/spotify_connect.png'
-            sender.state = 1
-            self.menu.get('Options').get('Source').get('Spotify App').state = 0
-        except:
+            def callback():
+                self.icon='icons/spotify_connect.png'
+                sender.state = 1
+                self.menu.get('Options').get('Source').get('Spotify App').state = 0
+            handleSignIn(callback)
+        except Exception as e:
             PlayfulPy.source = 'spotify'
             sender.state = 0
             self.menu.get('Options').get('Source').get('Spotify App').state = 1
+            print(e)
     
     @rumps.clicked("Options", "Send Notification On Change", "On")
     def send_notification_on(self, sender):
