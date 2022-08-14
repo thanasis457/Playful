@@ -276,7 +276,7 @@ class PlayfulPy(rumps.App):
             except Exception as e:
                 PlayfulPy.current_song = ['Error', '']
                 print(e)
-        threading.Timer(1, self.refresh_title).start()
+        threading.Timer(2.7, self.refresh_title).start()
 
     @rumps.clicked("Play / Pause")
     def toggle(self, _):
