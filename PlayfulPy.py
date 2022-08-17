@@ -175,7 +175,6 @@ def handleSignIn(callback=None):
                 print(e)
                 print("handling server")
                 getCode(callback)
-        PlayfulPy.source = 'connect'
         # global timer_thread
         # timer_thread = threading.Thread(timer, target=getRefreshToken)
         # timer_thread.start()
@@ -227,7 +226,11 @@ class PlayfulPy(rumps.App):
                 if(PlayfulPy.source=='connect'):
                     # Same as self.spotify_connect()
                     try:
+                        PlayfulPy.source = 'spotify'
+                        self.menu.get('Options').get('Source').get('Spotify App').state = 1
                         def updateConnect():
+                            PlayfulPy.source = 'connect'
+                            self.menu.get('Options').get('Source').get('Spotify App').state = 0
                             self.icon='icons/spotify_connect.png'
                             self.menu.get('Options').get('Source').get('Spotify Connect (Experimental)').state = 1
                         handleSignIn(updateConnect)
@@ -236,6 +239,8 @@ class PlayfulPy(rumps.App):
                         self.menu.get('Options').get('Source').get('Spotify App').state = 1
                 else:
                     self.menu.get('Options').get('Source').get('Spotify App').state = 1
+            else:
+                self.menu.get('Options').get('Source').get('Spotify App').state = 1
         except:
             pass
         self.refresh_title()
@@ -333,6 +338,7 @@ class PlayfulPy(rumps.App):
         try:
             def callback():
                 self.icon='icons/spotify_connect.png'
+                PlayfulPy.source = 'connect'
                 sender.state = 1
                 self.menu.get('Options').get('Source').get('Spotify App').state = 0
             handleSignIn(callback)
