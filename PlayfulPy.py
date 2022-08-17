@@ -1,3 +1,4 @@
+from http import server
 from sre_parse import State
 from time import sleep
 import rumps
@@ -133,6 +134,8 @@ def getRefreshToken(callback=None):
 def getCode(callback=None):
     q = Queue()
     p = Process(target=Server, args = (q,))
+    global server_instance
+    server_instance=p
     try:
         p.start()
         cnt=0
@@ -154,10 +157,13 @@ def getCode(callback=None):
         webbrowser.open(('''https://accounts.spotify.com/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code&scope={scope}''').format(client_id=client_id, redirect_uri=redirect_uri, scope=",".join(scope)))
         print('waiting')
         def waitCode():
-            global code
-            code = q.get(block=True, timeout=50)
-            p.terminate()
-            getAccessToken(callback)
+            try:
+                global code
+                code = q.get(block=True, timeout=50)
+                p.terminate()
+                getAccessToken(callback)
+            except:
+                p.terminate()
         threading.Thread(target=waitCode).start()
     except Exception as e:
         p.terminate()
@@ -369,6 +375,7 @@ class PlayfulPy(rumps.App):
             config['PlayfulPy']['refresh_token'] = refresh_token
         with open('PlayfulPy.ini', 'w+') as configfile:
             config.write(configfile)
+        server_instance.terminate()
         rumps.quit_application()
     
     def refresh_title_once(self):
