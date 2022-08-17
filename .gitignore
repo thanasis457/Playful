@@ -1,5 +1,5 @@
-build
-dist
-__pycache__
+node_modules/
+out/
 .DS_Store
-All\ dists
+sensitive.json
+package-lock.json
