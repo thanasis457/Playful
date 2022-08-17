@@ -375,7 +375,11 @@ class PlayfulPy(rumps.App):
             config['PlayfulPy']['refresh_token'] = refresh_token
         with open('PlayfulPy.ini', 'w+') as configfile:
             config.write(configfile)
-        server_instance.terminate()
+        try:
+            # Kill server process if it is still running
+            server_instance.terminate()
+        except Exception as e:
+            pass
         rumps.quit_application()
     
     def refresh_title_once(self):
