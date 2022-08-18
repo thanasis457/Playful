@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage, Notification } = require("electron");
 const sensitive = require("./sensitive.json");
 const Store = require("electron-store");
 const https = require("https");
@@ -16,6 +16,14 @@ const scope = [
   "user-read-playback-state",
   "user-modify-playback-state",
 ];
+
+// Store will be like:
+// {
+//   'refresh_token': ...,
+//   'length': 'Short' | 'Long',
+//   'source': 'spotify' | 'connect'
+//   'send_notification' = false | true
+// }
 const store = new Store();
 
 let spot_instance = null;
@@ -85,7 +93,9 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
-  let trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 20, height: 20 });
+  let trayIcon = nativeImage
+    .createFromPath(iconPath)
+    .resize({ width: 20, height: 20 });
   tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -110,11 +120,79 @@ app.whenReady().then(() => {
       },
     },
     {
-      label: "Refresh",
-      type: "normal",
-      click() {
-        getCurrentSongOnce();
-      },
+      type: "separator",
+    },
+    {
+      label: "Options",
+      type: "submenu",
+      submenu: [
+        {
+          label: "Text Length",
+          type: "submenu",
+          submenu: [
+            {
+              label: "Short",
+              type: "radio",
+              click() {
+                store.set("length", "short");
+              },
+              checked: store.get("length", "short") == "short",
+            },
+            {
+              label: "Long",
+              type: "radio",
+              click() {
+                store.set("length", "long");
+              },
+              checked: store.get("length", "short") == "long",
+            },
+          ],
+        },
+        {
+          label: "Source",
+          type: "submenu",
+          submenu: [
+            {
+              label: "Spotify App",
+              type: "radio",
+              click() {
+                store.set("source", "spotify");
+              },
+              checked: store.get("source", "spotify") == "spotify",
+            },
+            {
+              label: "Spotify Connect (Experimental)",
+              type: "radio",
+              click() {
+                store.set("source", "connect");
+              },
+              checked: store.get("source", "spotify") == "connect",
+            },
+          ],
+        },
+        {
+          label: "Send Notification On Change",
+          type: "submenu",
+          submenu: [
+            {
+              label: "Off",
+              type: "radio",
+              click() {
+                store.set("send_notification", "off");
+              },
+              checked: store.get("send_notification", "off") == "off",
+            },
+            {
+              label: "On",
+              type: "radio",
+              click() {
+                store.set("send_notification", "on");
+              },
+              checked: store.get("send_notification", "off") == "on",
+            },
+          ],
+        },
+      ],
     },
     {
       label: "Quit",
@@ -244,21 +322,61 @@ async function getRefreshToken() {
   });
 }
 
+function format_track(song, artist) {
+  if (store.get("length", "short") == "long") {
+    let song_edited = song;
+    let artist_edited = artist;
+    if (song.length + artist.length > 40) {
+      if (artist.length > 16 && song.length > 24) {
+        artist_edited = artist.substr(0, 14) + "..";
+        song_edited = song.substr(0, 22) + "..";
+      } else if (artist.length > 16) {
+        artist_edited = artist.substr(0, 40 - song.length - 2) + "..";
+      } else {
+        song_edited = song.substr(0, 40 - artist.length - 2) + "..";
+      }
+    }
+    if (artist_edited == "") {
+      return song_edited;
+    }
+    return song_edited + " - " + artist_edited;
+  } else {
+    song_edited = song;
+    artist_edited = artist;
+    if (song.length + artist.length > 26) {
+      if (artist.length > 10 && song.length > 16) {
+        artist_edited = artist.substr(0, 8) + "..";
+        song_edited = song.substr(0, 14) + "..";
+      } else if (artist.length > 10) {
+        artist_edited = artist.substr(0, 26 - song.length - 2) + "..";
+      } else {
+        song_edited = song.substr(0, 26 - artist.length - 2) + "..";
+      }
+    }
+    if (artist_edited == "") {
+      return song_edited;
+    }
+    return song_edited + " - " + artist_edited;
+  }
+}
+
 async function getCurrentSong() {
-  console.log("In current song");
+  let current_song = ['', '']
   const interval = setInterval(() => {
     spot_instance
       .get("me/player", {})
       .then((res) => {
-        // console.log(res);
-        // console.log(res.data.item);
+        // console.log(current_song);
+        // console.log([res.data.item.name,res.data.item.artists[0].name]);
+        if(res.data.item.name !== current_song[0] || res.data.item.artists[0].name!=current_song[1]){
+          current_song[0] = res.data.item.name;
+          current_song[1] = res.data.item.artists[0].name;
+          if(store.get('send_notification', 'off') === 'on'){
+            new Notification({ title: current_song[0], body: current_song[1], silent: true }).show()
+          }
+        }
         tray.setTitle(
-          (res.data.item.name.length > 15
-            ? res.data.item.name.substr(0, 13) + ".. - "
-            : res.data.item.name + " - ") +
-            (res.data.item.artists[0].name.length > 10
-              ? res.data.item.artists[0].name.substr(0, 8) + ".."
-              : res.data.item.artists[0].name)
+          format_track(res.data.item.name, res.data.item.artists[0].name)
         );
       })
       .catch((err) => {
@@ -275,12 +393,7 @@ async function getCurrentSongOnce() {
       .then((res) => {
         // console.log(res);
         tray.setTitle(
-          (res.data.item.name.length > 15
-            ? res.data.item.name.substr(0, 13) + ".. - "
-            : res.data.item.name + " - ") +
-            (res.data.item.artists[0].name.length > 10
-              ? res.data.item.artists[0].name.substr(0, 8) + ".."
-              : res.data.item.artists[0].name)
+          format_track(res.data.item.name, res.data.item.artists[0].name)
         );
         resolve();
       })
