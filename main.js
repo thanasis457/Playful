@@ -1,11 +1,19 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, Tray, Menu, nativeImage, Notification } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  Tray,
+  Menu,
+  nativeImage,
+  Notification,
+} = require("electron");
+const { exec } = require("child_process");
 const sensitive = require("./sensitive.json");
 const Store = require("electron-store");
-const https = require("https");
 const axios = require("axios");
 const path = require("path");
 const url = require("url");
+const { createBrotliCompress } = require("zlib");
 const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
@@ -21,20 +29,20 @@ const scope = [
 // {
 //   'refresh_token': ...,
 //   'length': 'Short' | 'Long',
-//   'source': 'spotify' | 'connect'
+//   'source': 'spotify' | 'connect' | 'none'
 //   'send_notification' = false | true
 // }
 const store = new Store();
 
-let spot_instance = null;
+let spot_instance = axios.create({});
 let auth_instance = null;
+let server_instance = null;
 
 let timer = null;
 let refresh_token = null;
 
 let code = null;
 let access_token = null;
-let mounted = false;
 
 const createWindow = () => {
   // Create the browser window.
@@ -54,44 +62,68 @@ const createWindow = () => {
       width: 800,
       height: 600,
     });
-    if (!mounted) {
-      mounted = true;
-      getCode(mainWindow);
-    }
+    return getCode(mainWindow);
   }
 };
 
 app.on("window-all-closed", async () => {
   app.dock.hide();
-  await getAccessToken();
-  getCurrentSong();
+  try {
+    await getAccessToken();
+  } catch (e) {
+    console.log("Could not get access token");
+  }
 });
+
+async function handleSignIn() {
+  return new Promise((resolve, reject) => {
+    try {
+      if (store.get("refresh_token")) {
+        refresh_token = store.get("refresh_token");
+        console.log("Got refresh");
+        getRefreshToken()
+          .then(() => {
+            resolve();
+          })
+          .catch((e) => {
+            console.log("Saved refresh token threw error");
+            createWindow()
+              .then(() => {
+                resolve();
+              })
+              .catch((e) => {
+                reject(e);
+              });
+          });
+      } else {
+        createWindow()
+          .then(() => {
+            resolve();
+          })
+          .catch((e) => {
+            reject(e);
+          });
+      }
+    } catch (e) {
+      new Notification({
+        title: "Error Connecting",
+      }).show();
+      reject(e);
+    }
+  });
+}
 
 let tray = null;
 
 app.whenReady().then(() => {
   // console.log("Stored is ", store.get("refresh_token"));
-  if (store.get("refresh_token")) {
-    refresh_token = store.get("refresh_token");
-    getRefreshToken()
-      .then(() => {
-        getCurrentSongOnce();
-        getCurrentSong();
-        app.dock.hide();
-      })
-      .catch((e) => {
-        console.log("Saved refresh token thew error");
-        createWindow();
-      });
-  } else {
-    createWindow();
-  }
 
   app.on("activate", () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+  app.dock.hide();
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
   let trayIcon = nativeImage
     .createFromPath(iconPath)
@@ -164,7 +196,18 @@ app.whenReady().then(() => {
               label: "Spotify Connect (Experimental)",
               type: "radio",
               click() {
-                store.set("source", "connect");
+                handleSignIn()
+                  .then(() => {
+                    console.log("Signed in");
+                    store.set("source", "connect");
+                  })
+                  .catch(() => {
+                    console.log("Signed Out");
+                    store.set("source", "connect");
+                    new Notification({
+                      title: "Sign In Error",
+                    }).show();
+                  });
               },
               checked: store.get("source", "spotify") == "connect",
             },
@@ -206,6 +249,20 @@ app.whenReady().then(() => {
   tray.setTitle("Now Playing");
   tray.setToolTip("This is my application.");
   tray.setContextMenu(contextMenu);
+  if (store.get("source") === "connect") {
+    store.set("source", "none");
+    handleSignIn()
+      .then(() => {
+        store.set("source", "connect");
+      })
+      .catch(() => {
+        store.set("source", "connect");
+        new Notification({
+          title: "Sign In Error",
+        }).show();
+      });
+  }
+  getCurrentSong();
 });
 
 async function startServer() {
@@ -213,16 +270,20 @@ async function startServer() {
     const express = require("express");
     const server = express();
     const port = uri_port;
-    let instance = null;
 
     server.get("/", (req, res) => {
       code = req.query.code;
       // res.send(req.query.code);
       res.send("All set! Close this window");
-      instance.close();
+      server_instance.close();
+    });
+    server.get("/death", (req, res) => {
+      // res.send(req.query.code);
+      res.send("Shutting server down");
+      server_instance.close();
     });
 
-    instance = server.listen(port, () => {
+    server_instance = server.listen(port, () => {
       console.log(`Example app listening on port ${port}`);
       resolve();
     });
@@ -231,14 +292,22 @@ async function startServer() {
 
 async function getCode(mainWindow) {
   await startServer();
-  mainWindow.loadURL(
-    `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=${scope.join(
-      ","
-    )}`
-  );
+  setTimeout(() => server_instance.close(), 60000);
+  try {
+    await mainWindow.loadURL(
+      `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=${scope.join(
+        ","
+      )}`
+    );
+  } catch (e) {
+    console.log("Failed to load window");
+    mainWindow.close();
+    server_instance.close();
+    throw new Error(e);
+  }
 }
 
-async function getAccessToken() {
+function getAccessToken() {
   return new Promise((resolve, reject) => {
     auth_instance = axios.create({
       baseURL: "https://accounts.spotify.com/",
@@ -282,7 +351,7 @@ async function getAccessToken() {
   });
 }
 
-async function getRefreshToken() {
+function getRefreshToken() {
   return new Promise((resolve, reject) => {
     auth_instance = axios.create({
       baseURL: "https://accounts.spotify.com/",
@@ -361,129 +430,205 @@ function format_track(song, artist) {
 }
 
 async function getCurrentSong() {
-  let current_song = ['', '']
+  let current_song = ["", ""];
   const interval = setInterval(() => {
-    spot_instance
-      .get("me/player", {})
-      .then((res) => {
-        // console.log(current_song);
-        // console.log([res.data.item.name,res.data.item.artists[0].name]);
-        if(res.data.item.name !== current_song[0] || res.data.item.artists[0].name!=current_song[1]){
-          current_song[0] = res.data.item.name;
-          current_song[1] = res.data.item.artists[0].name;
-          if(store.get('send_notification', 'off') === 'on'){
-            new Notification({ title: current_song[0], body: current_song[1], silent: true }).show()
-          }
+    if (store.get("source", "spotify") == "spotify") {
+      runAppleScript("compiledFunctions/running.scpt").then((res) => {
+        if (res === "running") {
+          runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
+            res = res.split("+");
+            if (res[0] !== current_song[0] || res[1] !== current_song[1]) {
+              current_song[0] = res[0];
+              current_song[1] = res[1];
+              if (store.get("send_notification", "off") === "on") {
+                new Notification({
+                  title: current_song[0],
+                  body: current_song[1],
+                  silent: true,
+                }).show();
+              }
+            }
+            tray.setTitle(format_track(res[0], res[1]));
+          });
+        } else {
+          tray.setTitle("Open Spotify");
         }
-        tray.setTitle(
-          format_track(res.data.item.name, res.data.item.artists[0].name)
-        );
-      })
-      .catch((err) => {
-        console.log("Spotify threw error");
-        console.log(err);
       });
+    } else if (store.get("source", "spotify") == "connect") {
+      spot_instance
+        .get("me/player", {})
+        .then((res) => {
+          // console.log([res.data.item.name,res.data.item.artists[0].name]);
+          // console.log(res);
+          if (res.status === 204) {
+            tray.setTitle("No Song Playing");
+            current_song[0] = "No Song Playing";
+            current_song[1] = "";
+            return;
+          }
+          if (
+            res.data.item.name !== current_song[0] ||
+            res.data.item.artists[0].name !== current_song[1]
+          ) {
+            current_song[0] = res.data.item.name;
+            current_song[1] = res.data.item.artists[0].name;
+            if (store.get("send_notification", "off") === "on") {
+              new Notification({
+                title: current_song[0],
+                body: current_song[1],
+                silent: true,
+              }).show();
+            }
+          }
+          tray.setTitle(
+            format_track(res.data.item.name, res.data.item.artists[0].name)
+          );
+        })
+        .catch((err) => {
+          console.log("Spotify threw error");
+          // console.log(err);
+          tray.setTitle("Connection Error");
+        });
+    }
   }, 2500);
 }
 
-async function getCurrentSongOnce() {
+function getCurrentSongOnce() {
   return new Promise((resolve, reject) => {
-    spot_instance
-      .get("me/player", {})
-      .then((res) => {
-        // console.log(res);
-        tray.setTitle(
-          format_track(res.data.item.name, res.data.item.artists[0].name)
-        );
+    if (store.get("source", "spotify") == "spotify") {
+      runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
+        res = res.split("+");
+        console.log(res[0]);
+        console.log(res[1]);
+        tray.setTitle(format_track(res[0], res[1]));
         resolve();
-      })
-      .catch((err) => {
-        console.log("Spotify threw error");
-        console.log(err.response);
-        reject(err);
       });
+    } else if (store.get("source", "spotify") == "connect") {
+      spot_instance
+        .get("me/player", {})
+        .then((res) => {
+          // console.log(res);
+          tray.setTitle(
+            format_track(res.data.item.name, res.data.item.artists[0].name)
+          );
+          resolve();
+        })
+        .catch((err) => {
+          console.log("Spotify threw error");
+          console.log(err.response);
+          reject(err);
+        });
+    }
   });
 }
 
-async function togglePlay() {
+function togglePlay() {
   return new Promise((resolve, reject) => {
-    console.log("Toggling Play/Pause");
-    spot_instance
-      .get("me/player", {})
-      .then((res) => {
-        console.log(res.data.is_playing);
-        if (res.data.is_playing) {
-          spot_instance
-            .put("me/player/pause", {})
-            .then((res) => {
-              console.log("Toggled");
-              // console.log(res.data.item);
-              resolve();
-            })
-            .catch((err) => {
-              console.log("Spotify threw error");
-              console.log(err.response.data);
-              reject(err);
-            });
+    if (store.get("source", "spotify") == "spotify") {
+      runAppleScript("compiledFunctions/state.scpt").then((res) => {
+        console.log("received res", res);
+        if (res === "paused") {
+          console.log("Playing");
+          runAppleScript("compiledFunctions/play.scpt").then(() => resolve());
         } else {
-          spot_instance
-            .put("me/player/play", {})
-            .then((res) => {
-              console.log("Toggled");
-              // console.log(res.data.item);
-              resolve();
-            })
-            .catch((err) => {
-              console.log("Spotify threw error");
-              console.log(err.response.data);
-              reject(err);
-            });
+          console.log("Pausing");
+          runAppleScript("compiledFunctions/pause.scpt").then(() => resolve());
         }
-      })
-      .catch((err) => {
-        console.log("Spotify threw error");
-        console.log(err.response.data);
-        reject(err);
       });
+    } else {
+      console.log("Toggling Play/Pause");
+      spot_instance
+        .get("me/player", {})
+        .then((res) => {
+          console.log(res.data.is_playing);
+          if (res.data.is_playing) {
+            spot_instance
+              .put("me/player/pause", {})
+              .then((res) => {
+                console.log("Toggled");
+                // console.log(res.data.item);
+                resolve();
+              })
+              .catch((err) => {
+                console.log("Spotify threw error");
+                console.log(err.response.data);
+                reject(err);
+              });
+          } else {
+            spot_instance
+              .put("me/player/play", {})
+              .then((res) => {
+                console.log("Toggled");
+                // console.log(res.data.item);
+                resolve();
+              })
+              .catch((err) => {
+                console.log("Spotify threw error");
+                console.log(err.response.data);
+                reject(err);
+              });
+          }
+        })
+        .catch((err) => {
+          console.log("Spotify threw error");
+          console.log(err.response.data);
+          reject(err);
+        });
+    }
   });
 }
 
-async function playNext() {
+function playNext() {
   return new Promise((resolve, reject) => {
-    console.log("Playing Next");
-    spot_instance
-      .post("me/player/next", {})
-      .then((res) => {
-        console.log("Skipped to next");
-        resolve();
-      })
-      .catch((err) => {
-        console.log("Spotify threw error");
+    if (store.get("source", "spotify") == "spotify") {
+      runAppleScript("compiledFunctions/next.scpt").then(() => resolve());
+    } else {
+      console.log("Playing Next");
+      spot_instance
+        .post("me/player/next", {})
+        .then((res) => {
+          console.log("Skipped to next");
+          resolve();
+        })
+        .catch((err) => {
+          console.log("Spotify threw error");
+          console.log(err);
+          reject(err.response.data);
+        });
+    }
+  });
+}
+
+function playPrevious() {
+  return new Promise((resolve, reject) => {
+    if (store.get("source", "spotify") == "spotify") {
+      runAppleScript("compiledFunctions/previous.scpt").then(() => resolve());
+    } else {
+      spot_instance
+        .post("me/player/previous", {})
+        .then((res) => {
+          console.log("Skipped to previous");
+          resolve();
+        })
+        .catch((err) => {
+          console.log("Spotify threw error");
+          console.log(err.response.data);
+          reject(err);
+        });
+    }
+  });
+}
+
+function runAppleScript(script) {
+  return new Promise((resolve, reject) => {
+    exec("osascript " + script, (err, stdout, stderr) => {
+      if (err) {
         console.log(err);
-        reject(err.response.data);
-      });
-  });
-}
-
-async function playPrevious() {
-  return new Promise((resolve, reject) => {
-    console.log("Playing Previous");
-    const spot_instance = axios.create({
-      baseURL: "https://api.spotify.com/v1/",
-      headers: {
-        Authorization: "Bearer " + access_token,
-      },
+        reject();
+      } else {
+        // console.log(stdout);
+        resolve(stdout.trim());
+      }
     });
-    spot_instance
-      .post("me/player/previous", {})
-      .then((res) => {
-        console.log("Skipped to previous");
-        resolve();
-      })
-      .catch((err) => {
-        console.log("Spotify threw error");
-        console.log(err.response.data);
-        reject(err);
-      });
   });
 }
