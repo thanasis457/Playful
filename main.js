@@ -117,7 +117,7 @@ let tray = null;
 
 app.whenReady().then(() => {
   // console.log("Stored is ", store.get("refresh_token"));
-
+  // store.openInEditor()
   app.on("activate", () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -196,14 +196,13 @@ app.whenReady().then(() => {
               label: "Spotify Connect (Experimental)",
               type: "radio",
               click() {
+                store.set("source", "connect");
                 handleSignIn()
                   .then(() => {
-                    console.log("Signed in");
-                    store.set("source", "connect");
+                    console.log("Signed In");
                   })
                   .catch(() => {
                     console.log("Signed Out");
-                    store.set("source", "connect");
                     new Notification({
                       title: "Sign In Error",
                     }).show();
@@ -250,13 +249,12 @@ app.whenReady().then(() => {
   tray.setToolTip("This is my application.");
   tray.setContextMenu(contextMenu);
   if (store.get("source") === "connect") {
-    store.set("source", "none");
     handleSignIn()
       .then(() => {
-        store.set("source", "connect");
+        console.log("Signed in");
       })
       .catch(() => {
-        store.set("source", "connect");
+        console.log("Signed out");
         new Notification({
           title: "Sign In Error",
         }).show();
@@ -621,14 +619,31 @@ function playPrevious() {
 
 function runAppleScript(script) {
   return new Promise((resolve, reject) => {
-    exec("osascript " + script, (err, stdout, stderr) => {
-      if (err) {
-        console.log(err);
-        reject();
-      } else {
-        // console.log(stdout);
-        resolve(stdout.trim());
-      }
-    });
+    // console.log(process.resourcesPath);
+    // console.log(process.env);
+    if (process.env.NODE_ENV === "development") {
+      exec("osascript " + script, (err, stdout, stderr) => {
+        if (err) {
+          console.log(err);
+          reject();
+        } else {
+          // console.log(stdout);
+          resolve(stdout.trim());
+        }
+      });
+    } else {
+      exec(
+        "osascript " + path.join(process.resourcesPath, script),
+        (err, stdout, stderr) => {
+          if (err) {
+            // console.log(err);
+            reject();
+          } else {
+            // console.log(stdout);
+            resolve(stdout.trim());
+          }
+        }
+      );
+    }
   });
 }
