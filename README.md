@@ -3,15 +3,15 @@
 A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
 ## Screenshots
-![](https://i.imgur.com/3NfLPaD.png)
-![Imgur](https://i.imgur.com/THuPqgc.png)
+![](https://i.imgur.com/fIKt0BV.png)
+![Imgur](https://i.imgur.com/mLmM4ad.png)
 
-## Installing
+## What is Playful-Py?
 
-The easiest way to get running is to head to [Releases](https://github.com/thanasis457/Playful/releases) and download the package for your platform.  
-Currently, only MacOS x86 is supported. (You can compile for Apple Silicon yourself. Instructions below)
+This branch is for the parallel and independent development of a Python implementation of Playful. (It used to be its [own project](https://github.com/thanasis457/PlayfulPy)) Hopefully, in the future, this version will be stable and fast enough to replace the current Playful app which is made with Electron.
+Currently, Playful-Py has UI stutter issues in specific cases and is not as efficient when idle.
 
-## Development
+## Running the app
 
 Playful allows two ways to get song information and control the Spotify player, using your locally installed Spotify instance and the Spotify Web API.
 
@@ -36,7 +36,7 @@ Now time to run the app
 
 ### Steps to run from source:
 
-1. `git clone https://github.com/thanasis457/Playful`
+1. `git clone -b PlayfulPy https://github.com/thanasis457/Playful` PlayfulPy
 2. `cd Playful`
 3. `pip install -r requirements.txt`
 4. `python PlayfulPy.py` to run
