@@ -1,4 +1,4 @@
-# <img src="icons/app.icns" align="left" width="114"/> Playful for Spotify
+# <img src="icons/app.icns" align="left" width="114"/> Playful-Py for Spotify
 
 A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
