@@ -3,11 +3,8 @@
 A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
 ## Screenshots
-![](https://i.imgur.com/3NfLPaD.png)
-![Imgur](https://i.imgur.com/THuPqgc.png)
-
-### Playful-Py is a lighter reimplementation you might want to check out
-Playful is an ElectronJS app, not the fastest or lightest of the bunch. Playful-Py is a complete rewrite of the app written in Python and with focus on efficiency. If interested head to https://github.com/thanasis457/PlayfulPy
+![](https://i.imgur.com/fIKt0BV.png)
+![Imgur](https://i.imgur.com/mLmM4ad.png)
 
 ## Installing
 
@@ -20,7 +17,9 @@ MacOS Apple Silicon (arm64): Playful-darwin-arm64-[version].zip (ARM no longer s
 
 ## Running from source
 
-To run from the source code you need to provide your own app credentials. All the details can be found in Spotify's [official docs](https://developer.spotify.com/documentation/web-api/) but here are all the steps to get you started.
+The app provides two ways to access Spotify playback info. Either through your local Spotify player or through the official Spotify Web Api (using Spotify Connect). For the first option no additional steps are needed. <b>To set up the Web API you need to do the following</b>
+
+You need to provide your own app credentials. All the details can be found in Spotify's [official docs](https://developer.spotify.com/documentation/web-api/) but here are all the steps to get you started.
 
 ### Steps to set up everything you need
 
@@ -43,6 +42,12 @@ Now time to run the app
 2. `cd Playful`
 3. `npm i`
 4. `npm start`
+
+### Buidling a distributable
+
+If you want to make your own distributable version of the app (.dmg files), run:
+`npm run make`  
+This will create a folder named `out`. At the path `out/make/zip/darwin/` you will find a zip file. This is your distributable.
 
 ### Notes
 
