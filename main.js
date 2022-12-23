@@ -6,6 +6,7 @@ const {
   Menu,
   nativeImage,
   Notification,
+  dialog,
 } = require("electron");
 const { exec } = require("child_process");
 const sensitive = require("./sensitive.json");
@@ -153,6 +154,13 @@ app.whenReady().then(() => {
     },
     {
       type: "separator",
+    },
+    {
+      label: "Open Spotify",
+      type: "normal",
+      click() {
+        openSpotify();
+      },
     },
     {
       label: "Options",
@@ -614,6 +622,22 @@ function playPrevious() {
           reject(err);
         });
     }
+  });
+}
+
+function openSpotify() {
+  return new Promise((resolve, reject) => {
+    runAppleScript("compiledFunctions/openSpotify.scpt").then(() => {
+      resolve();
+    })
+    .catch(()=>{
+      console.debug("Spotify cannot open. Possibly not installed");
+      dialog.showErrorBox(
+        "Spotify could not be opened",
+        "Spotify is possibly not installed or there is an issue with launching it"
+      );
+      reject();
+    });
   });
 }
 
