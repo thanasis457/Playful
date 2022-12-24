@@ -5,6 +5,7 @@ const {
   Tray,
   Menu,
   nativeImage,
+  NativeImage,
   Notification,
   dialog,
 } = require("electron");
@@ -15,6 +16,7 @@ const axios = require("axios");
 const path = require("path");
 const url = require("url");
 const { createBrotliCompress } = require("zlib");
+const { send } = require("process");
 const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
@@ -435,10 +437,40 @@ function format_track(song, artist) {
   }
 }
 
+async function sendNotification(current_song, source, albumUrlConnect = null) {
+  try {
+    let albumUrl = "";
+    if (source === "spotify") {
+      albumUrl = await runAppleScript(
+        "compiledFunctions/getAlbumCoverArt.scpt"
+      );
+    } else if (source === "connect") {
+      albumUrl = albumUrlConnect;
+    }
+    let albumRaw = await axios.get(albumUrl, {
+      responseType: "arraybuffer",
+    });
+    let img = nativeImage.createFromBuffer(albumRaw.data);
+    let songPlayingNotification = new Notification({
+      title: current_song[0],
+      body: current_song[1],
+      icon: img,
+      silent: true,
+    });
+    songPlayingNotification.show();
+    songPlayingNotification.on("click", () => {
+      openSpotify();
+    });
+  } catch (e) {
+    console.debug("Notification did not show on change: " + e);
+    return Promise.reject(new Error("Album cover could not be retrieved"));
+  }
+}
+
 async function getCurrentSong() {
   let current_song = ["", ""];
   const interval = setInterval(() => {
-    if (store.get("source", "spotify") == "spotify") {
+    if (store.get("source", "spotify") === "spotify") {
       runAppleScript("compiledFunctions/running.scpt").then((res) => {
         if (res === "running") {
           runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
@@ -447,11 +479,7 @@ async function getCurrentSong() {
               current_song[0] = res[0];
               current_song[1] = res[1];
               if (store.get("send_notification", "off") === "on") {
-                new Notification({
-                  title: current_song[0],
-                  body: current_song[1],
-                  silent: true,
-                }).show();
+                sendNotification(current_song, "spotify");
               }
             }
             tray.setTitle(format_track(res[0], res[1]));
@@ -464,8 +492,6 @@ async function getCurrentSong() {
       spot_instance
         .get("me/player", {})
         .then((res) => {
-          // console.log([res.data.item.name,res.data.item.artists[0].name]);
-          // console.log(res);
           if (res.status === 204) {
             tray.setTitle("No Song Playing");
             current_song[0] = "No Song Playing";
@@ -475,15 +501,15 @@ async function getCurrentSong() {
           if (
             res.data.item.name !== current_song[0] ||
             res.data.item.artists[0].name !== current_song[1]
-          ) {
+            ) {
             current_song[0] = res.data.item.name;
             current_song[1] = res.data.item.artists[0].name;
             if (store.get("send_notification", "off") === "on") {
-              new Notification({
-                title: current_song[0],
-                body: current_song[1],
-                silent: true,
-              }).show();
+              sendNotification(
+                current_song,
+                "connect",
+                res.data.item.album.images[0].url
+              );
             }
           }
           tray.setTitle(
@@ -627,17 +653,18 @@ function playPrevious() {
 
 function openSpotify() {
   return new Promise((resolve, reject) => {
-    runAppleScript("compiledFunctions/openSpotify.scpt").then(() => {
-      resolve();
-    })
-    .catch(()=>{
-      console.debug("Spotify cannot open. Possibly not installed");
-      dialog.showErrorBox(
-        "Spotify could not be opened",
-        "Spotify is possibly not installed or there is an issue with launching it"
-      );
-      reject();
-    });
+    runAppleScript("compiledFunctions/openSpotify.scpt")
+      .then(() => {
+        resolve();
+      })
+      .catch(() => {
+        console.debug("Spotify cannot open. Possibly not installed");
+        dialog.showErrorBox(
+          "Spotify could not be opened",
+          "Spotify is possibly not installed or there is an issue with launching it"
+        );
+        reject();
+      });
   });
 }
 
