@@ -25,9 +25,9 @@ You need to provide your own app credentials. All the details can be found in Sp
 
 1. Head to [Spotify's Dev Dashboard](https://developer.spotify.com/dashboard)
 
-2. Create a new Spotify App and add any other info you want to include (such name and description)
+2. Create a new Spotify App and add any other info you want to include (such as name and description)
 
-3. Open the App an click on "Edit Setting"
+3. Open the App and click on "Edit Setting"
 
 4. Add http://localhost:8080/ as a Redirect URI
 
