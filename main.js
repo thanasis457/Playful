@@ -8,25 +8,52 @@ const {
   NativeImage,
   Notification,
   dialog,
+  ipcMain,
 } = require("electron");
 const { exec } = require("child_process");
 const sensitive = require("./sensitive.json");
 const Store = require("electron-store");
 const axios = require("axios");
 const path = require("path");
+const config = require(path.join(__dirname, "config.json"))
 const url = require("url");
-const { createBrotliCompress } = require("zlib");
-const { send } = require("process");
 const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
 const uri_port = sensitive.uri_port;
+const { togglePlay, playNext, playPrevious, openSpotify, getCurrentSongOnce } = require("./mediaScripts.js")
 
 const scope = [
   "user-read-currently-playing",
   "user-read-playback-state",
   "user-modify-playback-state",
 ];
+
+
+function widget() {
+  const main = new BrowserWindow({
+    width: config.properties.width,
+    height: config.properties.height,
+    frame: false,
+    transparent: config.properties.transparent,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      sandbox: false
+    }
+  })
+  main.setPosition(config.properties.x, config.properties.y)
+  main.setSkipTaskbar(true)
+  // main.setResizable(false)
+  if (!config.properties.interact) {
+    const top = new BrowserWindow({parent: main, modal: true, transparent: true, frame: false, show: true, width: 0, height: 0})
+    top.setSkipTaskbar(true)
+  }
+  main.setAlwaysOnTop(config.properties.top)
+  main.once("ready-to-show", () => main.show())
+  main.loadFile(config.index)
+  main.openDevTools();
+}
 
 // Store will be like:
 // {
@@ -124,7 +151,7 @@ app.whenReady().then(() => {
   app.on("activate", () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) widget();
   });
   app.dock.hide();
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
@@ -137,21 +164,21 @@ app.whenReady().then(() => {
       label: "Play / Pause",
       type: "normal",
       click() {
-        togglePlay();
+        togglePlay({store, spot_instance});
       },
     },
     {
       label: "Next",
       type: "normal",
       click() {
-        playNext().then(() => getCurrentSongOnce());
+        playNext({store, spot_instance}).then(() => displaySong());
       },
     },
     {
       label: "Previous",
       type: "normal",
       click() {
-        playPrevious().then(() => getCurrentSongOnce());
+        playPrevious({store, spot_instance}).then(() => displaySong());
       },
     },
     {
@@ -271,6 +298,7 @@ app.whenReady().then(() => {
       });
   }
   getCurrentSong();
+  // widget();
 });
 
 async function startServer() {
@@ -470,202 +498,25 @@ async function sendNotification(current_song, source, albumUrlConnect = null) {
 async function getCurrentSong() {
   let current_song = ["", ""];
   const interval = setInterval(() => {
-    if (store.get("source", "spotify") === "spotify") {
-      runAppleScript("compiledFunctions/running.scpt").then((res) => {
-        if (res === "running") {
-          runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
-            res = res.split("+");
-            if (res[0] !== current_song[0] || res[1] !== current_song[1]) {
-              current_song[0] = res[0];
-              current_song[1] = res[1];
-              if (store.get("send_notification", "off") === "on") {
-                sendNotification(current_song, "spotify");
-              }
-            }
-            tray.setTitle(format_track(res[0], res[1]));
-          });
-        } else {
-          tray.setTitle("Open Spotify");
+    getCurrentSongOnce({store, spot_instance}).then((res) => {
+      if (res[0] !== current_song[0] || res[1] !== current_song[1]) {
+        current_song[0] = res[0];
+        current_song[1] = res[1];
+        if (store.get("send_notification", "off") === "on") {
+          if(res[2] === null){
+            sendNotification(current_song, "spotify");
+          } else {
+            sendNotification(current_song, "connect", res[2]);
+          }
         }
-      });
-    } else if (store.get("source", "spotify") == "connect") {
-      spot_instance
-        .get("me/player", {})
-        .then((res) => {
-          if (res.status === 204) {
-            tray.setTitle("No Song Playing");
-            current_song[0] = "No Song Playing";
-            current_song[1] = "";
-            return;
-          }
-          if (
-            res.data.item.name !== current_song[0] ||
-            res.data.item.artists[0].name !== current_song[1]
-            ) {
-            current_song[0] = res.data.item.name;
-            current_song[1] = res.data.item.artists[0].name;
-            if (store.get("send_notification", "off") === "on") {
-              sendNotification(
-                current_song,
-                "connect",
-                res.data.item.album.images[0].url
-              );
-            }
-          }
-          tray.setTitle(
-            format_track(res.data.item.name, res.data.item.artists[0].name)
-          );
-        })
-        .catch((err) => {
-          console.log("Spotify threw error");
-          // console.log(err);
-          tray.setTitle("Connection Error");
-        });
-    }
+      }
+      tray.setTitle(format_track(res[0], res[1]));
+    })
   }, 2500);
 }
 
-function getCurrentSongOnce() {
-  return new Promise((resolve, reject) => {
-    if (store.get("source", "spotify") == "spotify") {
-      runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
-        res = res.split("+");
-        console.log(res[0]);
-        console.log(res[1]);
-        tray.setTitle(format_track(res[0], res[1]));
-        resolve();
-      });
-    } else if (store.get("source", "spotify") == "connect") {
-      spot_instance
-        .get("me/player", {})
-        .then((res) => {
-          // console.log(res);
-          tray.setTitle(
-            format_track(res.data.item.name, res.data.item.artists[0].name)
-          );
-          resolve();
-        })
-        .catch((err) => {
-          console.log("Spotify threw error");
-          console.log(err.response);
-          reject(err);
-        });
-    }
-  });
-}
-
-function togglePlay() {
-  return new Promise((resolve, reject) => {
-    if (store.get("source", "spotify") == "spotify") {
-      runAppleScript("compiledFunctions/state.scpt").then((res) => {
-        console.log("received res", res);
-        if (res === "paused") {
-          console.log("Playing");
-          runAppleScript("compiledFunctions/play.scpt").then(() => resolve());
-        } else {
-          console.log("Pausing");
-          runAppleScript("compiledFunctions/pause.scpt").then(() => resolve());
-        }
-      });
-    } else {
-      console.log("Toggling Play/Pause");
-      spot_instance
-        .get("me/player", {})
-        .then((res) => {
-          console.log(res.data.is_playing);
-          if (res.data.is_playing) {
-            spot_instance
-              .put("me/player/pause", {})
-              .then((res) => {
-                console.log("Toggled");
-                // console.log(res.data.item);
-                resolve();
-              })
-              .catch((err) => {
-                console.log("Spotify threw error");
-                console.log(err.response.data);
-                reject(err);
-              });
-          } else {
-            spot_instance
-              .put("me/player/play", {})
-              .then((res) => {
-                console.log("Toggled");
-                // console.log(res.data.item);
-                resolve();
-              })
-              .catch((err) => {
-                console.log("Spotify threw error");
-                console.log(err.response.data);
-                reject(err);
-              });
-          }
-        })
-        .catch((err) => {
-          console.log("Spotify threw error");
-          console.log(err.response.data);
-          reject(err);
-        });
-    }
-  });
-}
-
-function playNext() {
-  return new Promise((resolve, reject) => {
-    if (store.get("source", "spotify") == "spotify") {
-      runAppleScript("compiledFunctions/next.scpt").then(() => resolve());
-    } else {
-      console.log("Playing Next");
-      spot_instance
-        .post("me/player/next", {})
-        .then((res) => {
-          console.log("Skipped to next");
-          resolve();
-        })
-        .catch((err) => {
-          console.log("Spotify threw error");
-          console.log(err);
-          reject(err.response.data);
-        });
-    }
-  });
-}
-
-function playPrevious() {
-  return new Promise((resolve, reject) => {
-    if (store.get("source", "spotify") == "spotify") {
-      runAppleScript("compiledFunctions/previous.scpt").then(() => resolve());
-    } else {
-      spot_instance
-        .post("me/player/previous", {})
-        .then((res) => {
-          console.log("Skipped to previous");
-          resolve();
-        })
-        .catch((err) => {
-          console.log("Spotify threw error");
-          console.log(err.response.data);
-          reject(err);
-        });
-    }
-  });
-}
-
-function openSpotify() {
-  return new Promise((resolve, reject) => {
-    runAppleScript("compiledFunctions/openSpotify.scpt")
-      .then(() => {
-        resolve();
-      })
-      .catch(() => {
-        console.debug("Spotify cannot open. Possibly not installed");
-        dialog.showErrorBox(
-          "Spotify could not be opened",
-          "Spotify is possibly not installed or there is an issue with launching it"
-        );
-        reject();
-      });
-  });
+function displaySong() {
+  getCurrentSongOnce({store, spot_instance}).then((res) => tray.setTitle(format_track(res[0], res[1])));
 }
 
 function runAppleScript(script) {
@@ -698,3 +549,11 @@ function runAppleScript(script) {
     }
   });
 }
+
+// // Main process
+// ipcMain.handle('get-song', async (event, args) => {
+//   console.log(getCurrentSongOnce());
+//   const result = await getCurrentSongOnce();
+//   console.log("Handler: ", result);
+//   return result;
+// })
