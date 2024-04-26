@@ -6,7 +6,7 @@ function getCurrentSongOnce({store, spot_instance}) {
       runAppleScript("compiledFunctions/running.scpt").then((res) => {
         if (res === "running") {
           runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
-            res = res.split("+");
+            res = res.split("+").slice(0, 2);
             console.log(res[0]);
             console.log(res[1]);
             res.push(null);
@@ -179,10 +179,27 @@ function runAppleScript(script) {
   });
 }
 
+function getState({store}) {
+  return new Promise((resolve, reject) => {
+    if (store.get("source", "spotify") == "spotify") {
+      runAppleScript("compiledFunctions/state.scpt").then((res) => {
+        console.log("received res", res);
+        if (res === "paused") {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    }
+  });
+}
+
+
 module.exports = {
   togglePlay,
   playNext,
   playPrevious,
   openSpotify,
   getCurrentSongOnce,
+  getState,
 };

@@ -21,7 +21,7 @@ const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
 const uri_port = sensitive.uri_port;
-const { togglePlay, playNext, playPrevious, openSpotify, getCurrentSongOnce } = require("./mediaScripts.js")
+const { togglePlay, playNext, playPrevious, openSpotify, getCurrentSongOnce, getState } = require("./mediaScripts.js")
 
 const scope = [
   "user-read-currently-playing",
@@ -37,6 +37,8 @@ function widget() {
     frame: false,
     transparent: config.properties.transparent,
     show: false,
+    type: "desktop",
+    focusable: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       sandbox: false
@@ -44,15 +46,16 @@ function widget() {
   })
   main.setPosition(config.properties.x, config.properties.y)
   main.setSkipTaskbar(true)
+  main.setIgnoreMouseEvents(false);
   // main.setResizable(false)
   if (!config.properties.interact) {
     const top = new BrowserWindow({parent: main, modal: true, transparent: true, frame: false, show: true, width: 0, height: 0})
     top.setSkipTaskbar(true)
   }
-  main.setAlwaysOnTop(config.properties.top)
+  // main.setAlwaysOnTop(config.properties.top)
   main.once("ready-to-show", () => main.show())
   main.loadFile(config.index)
-  main.openDevTools();
+  // main.openDevTools();
 }
 
 // Store will be like:
@@ -298,7 +301,7 @@ app.whenReady().then(() => {
       });
   }
   getCurrentSong();
-  // widget();
+  widget();
 });
 
 async function startServer() {
@@ -495,8 +498,8 @@ async function sendNotification(current_song, source, albumUrlConnect = null) {
   }
 }
 
+let current_song = ["", ""];
 async function getCurrentSong() {
-  let current_song = ["", ""];
   const interval = setInterval(() => {
     getCurrentSongOnce({store, spot_instance}).then((res) => {
       if (res[0] !== current_song[0] || res[1] !== current_song[1]) {
@@ -550,10 +553,23 @@ function runAppleScript(script) {
   });
 }
 
-// // Main process
-// ipcMain.handle('get-song', async (event, args) => {
-//   console.log(getCurrentSongOnce());
-//   const result = await getCurrentSongOnce();
-//   console.log("Handler: ", result);
-//   return result;
-// })
+// Main process
+ipcMain.handle('get-song', async (event, args) => {
+  return current_song;
+})
+
+ipcMain.on('play-previous', (event, args) => {
+  playPrevious({store, spot_instance});
+})
+
+ipcMain.on('toggle-play', (event, args) => {
+  togglePlay({store, spot_instance});
+})
+
+ipcMain.on('play-next', (event, args) => {
+  playNext({store, spot_instance})
+})
+
+ipcMain.handle('get-state', async (event, args) => {
+  return await getState({store});
+})
