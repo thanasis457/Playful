@@ -1,0 +1,16 @@
+{
+  "name": "spotify-listener",
+  "version": "1.0.0",
+  "description": "Spotify listener",
+  "index": "./widget/index.html",
+  "properties": {
+    "x": 1150,
+    "y": 50,
+    "width": 275,
+    "height": 190,
+    "transparent": true,
+    "draggable": true,
+    "top": true
+  },
+  "install": "pip install winrt"
+}

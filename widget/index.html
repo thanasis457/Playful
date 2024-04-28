@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset = "utf-8">
+    <link rel = "stylesheet" href = "styles.css">
+    <title>Spotify listener</title>
+  </head>
+  <body>
+    <div id = "main" class = "main">
+      <div class = "gradient"></div>
+      <!-- Gradient should always stay on top to allow mouseenter
+      events on other element.
+      Otherwise it will overlap them all -->
+      <div id="top-bar" class="draggable focusable"></div>
+      <div id = "backup"></div>
+      <div id = "preview"><div id = "preview-backup"></div></div>
+      <div class = "sector" style = "top: 45px;">
+        <div class = "buttons interact">
+          <div class = "media-control">
+            <button id = "skip-back" class = "btn btn-small focusable" onclick = "skipBack()"><div class = "hover-space"><div></div></div></button>
+            <button id = "pause-play" class = "btn btn-large focusable" onclick = "pausePlay()"><div class = "hover-space"><div></div></div></button>
+            <button id = "skip-forward" class = "btn btn-small focusable" onclick = "skipForward()"><div class = "hover-space"><div></div></div></button>
+          </div>
+        </div>
+      </div>
+      <div class = "sector" style = "top: 130px;">
+        <div class = "info">
+          <div class = "scroll-title l" style = "left: 25px;"><p id = "song-title"></p></div>
+          <div class = "scroll-title r" style = "right: 25px;"><p id = "song-artist"></p></div>
+        </div>
+      </div>
+    </div>
+    <script src = "../renderer.js" charset = "utf-8"></script>
+  </body>
+</html>
