@@ -21,7 +21,15 @@ const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
 const uri_port = sensitive.uri_port;
-const { togglePlay, playNext, playPrevious, openSpotify, getCurrentSongOnce, getState } = require("./mediaScripts.js")
+const {
+  togglePlay,
+  playNext,
+  playPrevious,
+  openSpotify,
+  getCurrentSongOnce,
+  getState,
+  getAlbumCoverArt,
+} = require("./mediaScripts.js")
 
 const scope = [
   "user-read-currently-playing",
@@ -36,23 +44,20 @@ function widget() {
     height: config.properties.height,
     frame: false,
     transparent: config.properties.transparent,
+    resizable: false,
     show: false,
-    type: "desktop",
     focusable: true,
+    type: "panel",
+    alwaysOnTop: true,
+    opacity: 0.9,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       sandbox: false
     }
   })
   main.setPosition(config.properties.x, config.properties.y)
-  main.setSkipTaskbar(true)
-  main.setIgnoreMouseEvents(false);
-  // main.setResizable(false)
-  if (!config.properties.interact) {
-    const top = new BrowserWindow({parent: main, modal: true, transparent: true, frame: false, show: true, width: 0, height: 0})
-    top.setSkipTaskbar(true)
-  }
-  // main.setAlwaysOnTop(config.properties.top)
+  main.setVisibleOnAllWorkspaces(true);
+  main.setIgnoreMouseEvents(true, {forward: true});
   main.once("ready-to-show", () => main.show())
   main.loadFile(config.index)
   // main.openDevTools();
@@ -468,16 +473,10 @@ function format_track(song, artist) {
   }
 }
 
-async function sendNotification(current_song, source, albumUrlConnect = null) {
+
+async function sendNotification(current_song) {
   try {
-    let albumUrl = "";
-    if (source === "spotify") {
-      albumUrl = await runAppleScript(
-        "compiledFunctions/getAlbumCoverArt.scpt"
-      );
-    } else if (source === "connect") {
-      albumUrl = albumUrlConnect;
-    }
+    const albumUrl = current_song.cover;
     let albumRaw = await axios.get(albumUrl, {
       responseType: "arraybuffer",
     });
@@ -498,18 +497,30 @@ async function sendNotification(current_song, source, albumUrlConnect = null) {
   }
 }
 
-let current_song = ["", ""];
+let current_song = {
+  song: "",
+  artist: "",
+  cover: ""
+}; //song, artist, album-cover
+
 async function getCurrentSong() {
   const interval = setInterval(() => {
     getCurrentSongOnce({store, spot_instance}).then((res) => {
-      if (res[0] !== current_song[0] || res[1] !== current_song[1]) {
-        current_song[0] = res[0];
-        current_song[1] = res[1];
-        if (store.get("send_notification", "off") === "on") {
-          if(res[2] === null){
-            sendNotification(current_song, "spotify");
-          } else {
-            sendNotification(current_song, "connect", res[2]);
+      //Change in song detected. Update relevant vars
+      if (res[0] !== current_song.song || res[1] !== current_song.artist) {
+        current_song.song = res[0];
+        current_song.artist = res[1];
+        if(res[2] === null){
+          getAlbumCoverArt().then((cover) => {
+            current_song.cover = cover;
+            if (store.get("send_notification", "off") === "on") {
+              sendNotification(current_song);
+            }
+          })
+        } else {
+          current_song.cover = res[2];
+          if (store.get("send_notification", "off") === "on") {
+            sendNotification(current_song);
           }
         }
       }
@@ -522,39 +533,9 @@ function displaySong() {
   getCurrentSongOnce({store, spot_instance}).then((res) => tray.setTitle(format_track(res[0], res[1])));
 }
 
-function runAppleScript(script) {
-  return new Promise((resolve, reject) => {
-    // console.log(process.resourcesPath);
-    // console.log(process.env);
-    if (process.env.NODE_ENV === "development") {
-      exec("osascript " + script, (err, stdout, stderr) => {
-        if (err) {
-          console.log(err);
-          reject();
-        } else {
-          // console.log(stdout);
-          resolve(stdout.trim());
-        }
-      });
-    } else {
-      exec(
-        "osascript " + path.join(process.resourcesPath, script),
-        (err, stdout, stderr) => {
-          if (err) {
-            // console.log(err);
-            reject();
-          } else {
-            // console.log(stdout);
-            resolve(stdout.trim());
-          }
-        }
-      );
-    }
-  });
-}
-
 // Main process
 ipcMain.handle('get-song', async (event, args) => {
+  // console.debug(current_song)
   return current_song;
 })
 
@@ -572,4 +553,9 @@ ipcMain.on('play-next', (event, args) => {
 
 ipcMain.handle('get-state', async (event, args) => {
   return await getState({store});
+})
+
+ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  win.setIgnoreMouseEvents(ignore, options)
 })

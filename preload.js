@@ -8,3 +8,18 @@ contextBridge.exposeInMainWorld('api', {
   togglePlay: () => ipcRenderer.send('toggle-play'),
   getState: () => ipcRenderer.invoke('get-state'),
 })
+
+window.addEventListener('DOMContentLoaded', () => {
+  const interactiveElements = 
+  document.querySelectorAll('.focusable');
+
+  interactiveElements.forEach((element) => {
+      element.addEventListener('mouseenter', () => {
+          ipcRenderer.send('set-ignore-mouse-events', false);
+      });
+
+      element.addEventListener('mouseleave', () => {
+          ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
+      });
+  });
+})

@@ -18,7 +18,6 @@ var preview_backup = document.getElementById("preview-backup")
 var paused = false;
 var closed = true
 window.api.getState().then((res) => {
-  console.log("Got: "+res);
   paused = !res;
 });
 
@@ -48,7 +47,8 @@ var previous_result = [0, 0]
 
 setInterval(async () => {
   try {
-  const [song, artist] = await window["api"].getSong();
+  const {song, artist, cover} = await window["api"].getSong();
+  album_cover = cover;
   var result = {
     "album_artist": "",
     "album_title": "",

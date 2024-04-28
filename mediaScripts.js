@@ -34,6 +34,15 @@ function getCurrentSongOnce({store, spot_instance}) {
   });
 }
 
+function getAlbumCoverArt() {
+  // Assume source is spotify
+  return new Promise((resolve, reject) => {
+      runAppleScript("compiledFunctions/getAlbumCoverArt.scpt").then((res) => {
+        resolve(res)
+      })
+    });
+}
+
 function togglePlay({store, spot_instance}) {
   return new Promise((resolve, reject) => {
     if (store.get("source", "spotify") == "spotify") {
@@ -202,4 +211,5 @@ module.exports = {
   openSpotify,
   getCurrentSongOnce,
   getState,
+  getAlbumCoverArt,
 };
