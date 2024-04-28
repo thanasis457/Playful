@@ -28,7 +28,7 @@ const {
   getCurrentSongOnce,
   getState,
   getAlbumCoverArt,
-} = require("./mediaScripts.js")
+} = require("./mediaScripts.js");
 
 const scope = [
   "user-read-currently-playing",
@@ -539,7 +539,7 @@ async function sendNotification(current_song) {
 let current_song = {
   song: "",
   artist: "",
-  cover: ""
+  cover: "",
 }; //song, artist, album-cover
 
 async function getCurrentSong() {
@@ -585,8 +585,14 @@ ipcMain.on('play-previous', (event, args) => {
   playPrevious({store, spot_instance});
 })
 
-ipcMain.on('toggle-play', (event, args) => {
-  togglePlay({store, spot_instance});
+// Return false on failure
+ipcMain.handle('toggle-play', async (event, args) => {
+  try{
+    await togglePlay({store, spot_instance});
+    return true;
+  } catch {
+    return false;
+  }
 })
 
 ipcMain.on('play-next', (event, args) => {

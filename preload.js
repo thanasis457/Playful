@@ -4,7 +4,7 @@ contextBridge.exposeInMainWorld('api', {
   getSong: async () => ipcRenderer.invoke('get-song'),
   playPrevious: () => ipcRenderer.send('play-previous'),
   playNext: () => ipcRenderer.send('play-next'),
-  togglePlay: () => ipcRenderer.send('toggle-play'),
+  togglePlay: () => ipcRenderer.invoke('toggle-play'),
   getState: () => ipcRenderer.invoke('get-state'),
 })
 

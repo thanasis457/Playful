@@ -196,13 +196,18 @@ function getState({store}) {
   return new Promise((resolve, reject) => {
     if (store.get("source", "spotify") == "spotify") {
       runAppleScript("compiledFunctions/state.scpt").then((res) => {
-        console.log("received res", res);
         if (res === "paused") {
           resolve(false);
         } else {
           resolve(true);
         }
+      })
+      .catch((err) => {
+        console.log("received err", err);
+        reject(err);
       });
+    } else {
+      resolve(true);
     }
   });
 }
