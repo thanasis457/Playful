@@ -1,5 +1,4 @@
 const { contextBridge, ipcRenderer } = require('electron')
-const { playPrevious, togglePlay, playNext, getState } = require('./mediaScripts')
 console.log("Hey")
 contextBridge.exposeInMainWorld('api', {
   getSong: async () => ipcRenderer.invoke('get-song'),

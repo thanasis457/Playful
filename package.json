@@ -1,11 +1,12 @@
 {
   "name": "Playful",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Shows the current playing song. Made to show spotify songs. No controls since keyboard is faster",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "NODE_ENV=development electron-forge start",
+    "prod": "NODE_ENV=production electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
@@ -32,7 +33,10 @@
       "packagerConfig": {
         "asar": true,
         "icon": "icons/app",
-        "extraResource": "compiledFunctions"
+        "extraResource": ["./compiledFunctions", "./media", "./widget"],
+        "extendInfo": {
+          "LSUIElement": 1
+        }
       },
       "makers": [
         {

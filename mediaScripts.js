@@ -1,4 +1,5 @@
 const { exec } = require("child_process");
+const path = require("path");
 
 function getCurrentSongOnce({store, spot_instance}) {
   return new Promise((resolve, reject) => {
@@ -15,6 +16,9 @@ function getCurrentSongOnce({store, spot_instance}) {
         } else {
           resolve(["Open Spotify", "", null])
         }
+      })
+      .catch((err) => {
+        reject(err);
       })
     } else if (store.get("source", "spotify") == "connect") {
       spot_instance
@@ -165,7 +169,7 @@ function runAppleScript(script) {
       exec("osascript " + script, (err, stdout, stderr) => {
         if (err) {
           console.log(err);
-          reject();
+          reject(err);
         } else {
           // console.log(stdout);
           resolve(stdout.trim());
@@ -177,7 +181,7 @@ function runAppleScript(script) {
         (err, stdout, stderr) => {
           if (err) {
             // console.log(err);
-            reject();
+            reject(err);
           } else {
             // console.log(stdout);
             resolve(stdout.trim());

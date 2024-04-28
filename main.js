@@ -10,12 +10,11 @@ const {
   dialog,
   ipcMain,
 } = require("electron");
-const { exec } = require("child_process");
 const sensitive = require("./sensitive.json");
 const Store = require("electron-store");
 const axios = require("axios");
 const path = require("path");
-const config = require(path.join(__dirname, "config.json"))
+const config = require(path.join(__dirname, "./config.json"))
 const url = require("url");
 const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
@@ -37,9 +36,9 @@ const scope = [
   "user-modify-playback-state",
 ];
 
-
+let widgetWindow = null;
 function widget() {
-  const main = new BrowserWindow({
+  widgetWindow = new BrowserWindow({
     width: config.properties.width,
     height: config.properties.height,
     frame: false,
@@ -53,20 +52,30 @@ function widget() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       sandbox: false
-    }
+    },
+    skipTaskbar: true,
   })
-  main.setPosition(config.properties.x, config.properties.y)
-  main.setVisibleOnAllWorkspaces(true);
-  main.setIgnoreMouseEvents(true, {forward: true});
-  main.once("ready-to-show", () => main.show())
-  main.loadFile(config.index)
+  widgetWindow.setPosition(config.properties.x, config.properties.y)
+  widgetWindow.setVisibleOnAllWorkspaces(true);
+  widgetWindow.setIgnoreMouseEvents(true, {forward: true});
+  widgetWindow.once("ready-to-show", () => {
+      widgetWindow.show();
+      app.dock.hide();
+  })
+  widgetWindow.loadFile(config.index)
+  widgetWindow.on("closed", () => {
+    app.dock.hide();
+    widgetWindow = null;
+    
+  })
   // main.openDevTools();
 }
 
 // Store will be like:
 // {
 //   'refresh_token': ...,
-//   'length': 'Short' | 'Long',
+//   'widget': 'hide' | 'show',
+//   'length': 'short' | 'long',
 //   'source': 'spotify' | 'connect' | 'none'
 //   'send_notification' = false | true
 // }
@@ -100,18 +109,21 @@ const createWindow = () => {
       width: 800,
       height: 600,
     });
+    mainWindow.on("closed", async () => {
+      app.dock.hide();
+      try {
+        await getAccessToken();
+      } catch (e) {
+        console.log("Could not get access token");
+      }
+    })
     return getCode(mainWindow);
   }
 };
 
-app.on("window-all-closed", async () => {
-  app.dock.hide();
-  try {
-    await getAccessToken();
-  } catch (e) {
-    console.log("Could not get access token");
-  }
-});
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit()
+})
 
 async function handleSignIn() {
   return new Promise((resolve, reject) => {
@@ -156,11 +168,11 @@ let tray = null;
 app.whenReady().then(() => {
   // console.log("Stored is ", store.get("refresh_token"));
   // store.openInEditor()
-  app.on("activate", () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) widget();
-  });
+  // app.on("activate", () => {
+  //   // On macOS it's common to re-create a window in the app when the
+  //   // dock icon is clicked and there are no other windows open.
+  //   if (BrowserWindow.getAllWindows().length === 0) widget();
+  // });
   app.dock.hide();
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
   let trayIcon = nativeImage
@@ -204,6 +216,34 @@ app.whenReady().then(() => {
       type: "submenu",
       submenu: [
         {
+          label: "Floating Widget",
+          type: "submenu",
+          submenu: [
+            {
+              label: "Hide",
+              type: "radio",
+              click() {
+                store.set("widget", "hide");
+                if(widgetWindow) {
+                  widgetWindow.close();
+                }
+              },
+              checked: store.get("widget", "hide") === "hide",
+            },
+            {
+              label: "Show",
+              type: "radio",
+              click() {
+                if(!widgetWindow){
+                  widget();
+                }
+                store.set("widget", "show");
+              },
+              checked: store.get("widget", "hide") === "show",
+            },
+          ],
+        },
+        {
           label: "Text Length",
           type: "submenu",
           submenu: [
@@ -213,7 +253,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("length", "short");
               },
-              checked: store.get("length", "short") == "short",
+              checked: store.get("length", "short") === "short",
             },
             {
               label: "Long",
@@ -221,7 +261,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("length", "long");
               },
-              checked: store.get("length", "short") == "long",
+              checked: store.get("length", "short") === "long",
             },
           ],
         },
@@ -235,7 +275,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("source", "spotify");
               },
-              checked: store.get("source", "spotify") == "spotify",
+              checked: store.get("source", "spotify") === "spotify",
             },
             {
               label: "Spotify Connect (Experimental)",
@@ -253,7 +293,7 @@ app.whenReady().then(() => {
                     }).show();
                   });
               },
-              checked: store.get("source", "spotify") == "connect",
+              checked: store.get("source", "spotify") === "connect",
             },
           ],
         },
@@ -267,7 +307,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("send_notification", "off");
               },
-              checked: store.get("send_notification", "off") == "off",
+              checked: store.get("send_notification", "off") === "off",
             },
             {
               label: "On",
@@ -275,7 +315,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("send_notification", "on");
               },
-              checked: store.get("send_notification", "off") == "on",
+              checked: store.get("send_notification", "off") === "on",
             },
           ],
         },
@@ -306,7 +346,7 @@ app.whenReady().then(() => {
       });
   }
   getCurrentSong();
-  widget();
+  if(store.get('widget', 'hide') === 'show') widget();
 });
 
 async function startServer() {
@@ -473,7 +513,6 @@ function format_track(song, artist) {
   }
 }
 
-
 async function sendNotification(current_song) {
   try {
     const albumUrl = current_song.cover;
@@ -525,6 +564,9 @@ async function getCurrentSong() {
         }
       }
       tray.setTitle(format_track(res[0], res[1]));
+    })
+    .catch((err) => {
+      console.debug(err)
     })
   }, 2500);
 }
