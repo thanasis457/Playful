@@ -25,7 +25,7 @@ function skipBack() {
 }
 async function pausePlay() {
   if (!closed) {
-    if(await window.api.togglePlay()){
+    if (await window.api.togglePlay()) {
       if (paused) {
         paused = false
       }
@@ -56,19 +56,13 @@ setInterval(() => {
   });
 }, 3000)
 
-setInterval(async () => {
-  const {song, artist, cover} = await window["api"].getSong();
-  if(song !== prev_data.song) {
-    prev_data.song= song;
-    song_title.innerText = song;
-  }
-  if(artist !== prev_data.artist) {
-    prev_data.artist= artist;
-    song_artist.innerText = artist;
-  }
-  album_cover = cover;
+window.api.onMediaChange((song) => {
+  song_title.innerText = song.name;
+  song_artist.innerText = song.artist;
   
-  if(album_cover != prev_data.album_cover) {
+  album_cover = cover;
+
+  if (album_cover != prev_data.album_cover) {
     prev_data.album_cover = album_cover;
     main.style.background = `url("${album_cover}")`
     var time = new Date().getTime()
@@ -81,15 +75,14 @@ setInterval(async () => {
       preview_backup.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
     }, 500)
   }
-
   if (song_title.innerText.length >= 16) {
-    song_title.style.animation = `loop-scroll ${song_title.innerText.length/2}s linear infinite`
+    song_title.style.animation = `loop-scroll ${song_title.innerText.length / 2}s linear infinite`
   }
   else {
     song_title.style.animation = "none"
   }
   if (song_artist.innerText.length >= 16) {
-    song_artist.style.animation = `loop-scroll ${song_artist.innerText.length/2}s linear infinite`
+    song_artist.style.animation = `loop-scroll ${song_artist.innerText.length / 2}s linear infinite`
     song_artist.style.right = "auto"
     song_artist.style.left = "0"
   }
@@ -98,7 +91,7 @@ setInterval(async () => {
     song_artist.style.right = "0"
     song_artist.style.left = "auto"
   }
-  if(paused != prev_data.pause) {
+  if (paused != prev_data.pause) {
     prev_data.pause = paused;
     if (paused) {
       pause_play.style.backgroundImage = play
@@ -109,4 +102,18 @@ setInterval(async () => {
       pause_play.childNodes[0].childNodes[0].style.backgroundImage = pause
     }
   }
-}, 1000)
+})
+// setInterval(async () => {
+
+//   if (paused != prev_data.pause) {
+//     prev_data.pause = paused;
+//     if (paused) {
+//       pause_play.style.backgroundImage = play
+//       pause_play.childNodes[0].childNodes[0].style.backgroundImage = play
+//     }
+//     else {
+//       pause_play.style.backgroundImage = pause
+//       pause_play.childNodes[0].childNodes[0].style.backgroundImage = pause
+//     }
+//   }
+// }, 1000)

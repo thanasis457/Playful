@@ -253,7 +253,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("length", "short");
-                tray.setTitle(format_track(current_song.song, current_song.artist));
+                tray.setTitle(format_track(current_song.name, current_song.artist));
               },
               checked: store.get("length", "short") === "short",
             },
@@ -262,7 +262,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("length", "long");
-                tray.setTitle(format_track(current_song.song, current_song.artist));
+                tray.setTitle(format_track(current_song.name, current_song.artist));
               },
               checked: store.get("length", "short") === "long",
             },
@@ -540,7 +540,7 @@ async function sendNotification(current_song) {
 }
 
 let current_song = {
-  song: "",
+  name: "",
   artist: "",
   trackID: "",
   album: "",
@@ -548,25 +548,25 @@ let current_song = {
 }; //song, artist, album-cover
 
 async function getCurrentSong() {
-  function updateSong(song, artist) {
+  function updateSong(name, artist) {
     console.log("Updating song js")
-    if (song !== current_song.song || artist !== current_song.artist) {
-      current_song.song = song;
+    if (name !== current_song.name || artist !== current_song.artist) {
+      current_song.name = name;
       current_song.artist = artist;
-      if (store.get("send_notification", "off") === "on") {
-        sendNotification(current_song);
-        }
-        console.log("Song name js:", String(song), "js");
-          tray.setTitle(format_track(song, artist));
-        console.log("Setting tray");
+      tray.setTitle(format_track(name, artist));
+      widgetWindow.webContents.send('update-song', current_song)
     }
   }
   console.log("On song JS")
-  try{
-    MediaSubscriber.subscribe(updateSong)
-  } catch(e){
-    console.log(e)
-  }
+  getCurrentSongOnce({ store, spot_instance }).then((res) => {
+    current_song.name = res[0];
+    current_song.artist = res[1];
+    tray.setTitle(format_track(res[0], res[1]));
+  })
+    .catch((err) => {
+      console.debug(err)
+    })
+  MediaSubscriber.subscribe(updateSong)
   console.log("Subscribed js")
 }
 
@@ -601,4 +601,5 @@ ipcMain.handle('get-state', async (event, args) => {
 ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   win.setIgnoreMouseEvents(ignore, options)
+  // console.log("Ignoring: ", ignore)
 })

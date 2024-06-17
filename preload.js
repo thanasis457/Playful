@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   playNext: () => ipcRenderer.send('play-next'),
   togglePlay: () => ipcRenderer.invoke('toggle-play'),
   getState: () => ipcRenderer.invoke('get-state'),
+  onMediaChange: (callback) => ipcRenderer.on('update-song', (_event, value) => callback(value))
 })
 
 window.addEventListener('DOMContentLoaded', () => {
