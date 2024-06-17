@@ -15,20 +15,24 @@ struct Song{
     char* name;
     char* artist;
 };
-void callbackFunction(char * name, char * artist) {
+
+void jsCallbackHandler(Napi::Env env, Function jsCallback, Song *song){
+    // Transform native data into JS data, passing it to the provided
+    // `jsCallback` -- the TSFN's JavaScript function.
+    std::cout << song << " cppppp" << std::endl;
+    jsCallback.Call({Napi::String::New(env, song->name), Napi::String::New(env, song->artist)});
+    free(song->name);
+    free(song->artist);
+    free(song);
+}
+
+void callbackFunction(char *name, char *artist) {
     int count = 1;
     std::cout<<name<<" song received cpp"<<std::endl;
-    auto callback = [](Napi::Env env, Function jsCallback, Song* song)
-    {
-        // Transform native data into JS data, passing it to the provided
-        // `jsCallback` -- the TSFN's JavaScript function.
-        std::cout<<song<<" cppppp"<<std::endl;
-        jsCallback.Call({Napi::String::New(env, song->name), Napi::String::New(env, song->artist)});
-        free(song->name);
-        free(song->artist);
-        free(song);
-        // We're finished with the data.
-    };
+    // auto callback = [](Napi::Env env, Function jsCallback, Song* song)
+    // {
+    //     // We're finished with the data.
+    // };
 
     // Create new data
     // Perform a blocking call
@@ -39,7 +43,7 @@ void callbackFunction(char * name, char * artist) {
     Song *song = (Song*) malloc(sizeof(Song));
     song->name = nameM;
     song->artist = artistM;
-    napi_status status = tsfn.BlockingCall(song, callback);
+    napi_status status = tsfn.BlockingCall(song, jsCallbackHandler);
     
 
 
