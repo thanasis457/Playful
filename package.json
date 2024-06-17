@@ -19,21 +19,30 @@
     "@electron-forge/maker-rpm": "^6.0.0-beta.65",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.65",
     "@electron-forge/maker-zip": "^6.0.0-beta.65",
-    "electron": "^19.0.10"
+    "@electron/rebuild": "^3.6.0",
+    "electron": "^31.0.1"
   },
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.7.2",
+    "bindings": "^1.5.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
     "express": "^4.18.1",
-    "run-applescript": "^6.0.0"
+    "nan": "^2.20.0",
+    "node-gyp": "^10.1.0",
+    "run-applescript": "^6.0.0",
+    "node-addon-api": "*"
   },
   "config": {
     "forge": {
       "packagerConfig": {
         "asar": true,
         "icon": "icons/app",
-        "extraResource": ["./compiledFunctions", "./media", "./widget"],
+        "extraResource": [
+          "./compiledFunctions",
+          "./media",
+          "./widget"
+        ],
         "extendInfo": {
           "LSUIElement": 1
         }

@@ -16,6 +16,7 @@ const axios = require("axios");
 const path = require("path");
 const config = require(path.join(__dirname, "./config.json"))
 const url = require("url");
+const MediaSubscriber = require("bindings")("MediaSubscriber.node")
 const client_id = sensitive.client_id;
 const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
@@ -57,16 +58,16 @@ function widget() {
   })
   widgetWindow.setPosition(config.properties.x, config.properties.y)
   widgetWindow.setVisibleOnAllWorkspaces(true);
-  widgetWindow.setIgnoreMouseEvents(true, {forward: true});
+  widgetWindow.setIgnoreMouseEvents(true, { forward: true });
   widgetWindow.once("ready-to-show", () => {
-      widgetWindow.show();
-      app.dock.hide();
+    widgetWindow.show();
+    app.dock.hide();
   })
   widgetWindow.loadFile(config.index)
   widgetWindow.on("closed", () => {
     app.dock.hide();
     widgetWindow = null;
-    
+
   })
   // main.openDevTools();
 }
@@ -184,21 +185,21 @@ app.whenReady().then(() => {
       label: "Play / Pause",
       type: "normal",
       click() {
-        togglePlay({store, spot_instance});
+        togglePlay({ store, spot_instance });
       },
     },
     {
       label: "Next",
       type: "normal",
       click() {
-        playNext({store, spot_instance}).then(() => displaySong());
+        playNext({ store, spot_instance });
       },
     },
     {
       label: "Previous",
       type: "normal",
       click() {
-        playPrevious({store, spot_instance}).then(() => displaySong());
+        playPrevious({ store, spot_instance });
       },
     },
     {
@@ -224,7 +225,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("widget", "hide");
-                if(widgetWindow) {
+                if (widgetWindow) {
                   widgetWindow.close();
                 }
               },
@@ -234,7 +235,7 @@ app.whenReady().then(() => {
               label: "Show",
               type: "radio",
               click() {
-                if(!widgetWindow){
+                if (!widgetWindow) {
                   widget();
                 }
                 store.set("widget", "show");
@@ -252,6 +253,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("length", "short");
+                tray.setTitle(format_track(current_song.song, current_song.artist));
               },
               checked: store.get("length", "short") === "short",
             },
@@ -260,6 +262,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("length", "long");
+                tray.setTitle(format_track(current_song.song, current_song.artist));
               },
               checked: store.get("length", "short") === "long",
             },
@@ -346,7 +349,7 @@ app.whenReady().then(() => {
       });
   }
   getCurrentSong();
-  if(store.get('widget', 'hide') === 'show') widget();
+  if (store.get('widget', 'hide') === 'show') widget();
 });
 
 async function startServer() {
@@ -539,40 +542,32 @@ async function sendNotification(current_song) {
 let current_song = {
   song: "",
   artist: "",
-  cover: "",
+  trackID: "",
+  album: "",
+  playing: false,
 }; //song, artist, album-cover
 
 async function getCurrentSong() {
-  const interval = setInterval(() => {
-    getCurrentSongOnce({store, spot_instance}).then((res) => {
-      //Change in song detected. Update relevant vars
-      if (res[0] !== current_song.song || res[1] !== current_song.artist) {
-        current_song.song = res[0];
-        current_song.artist = res[1];
-        if(res[2] === null){
-          getAlbumCoverArt().then((cover) => {
-            current_song.cover = cover;
-            if (store.get("send_notification", "off") === "on") {
-              sendNotification(current_song);
-            }
-          })
-        } else {
-          current_song.cover = res[2];
-          if (store.get("send_notification", "off") === "on") {
-            sendNotification(current_song);
-          }
+  function updateSong(song, artist) {
+    console.log("Updating song js")
+    if (song !== current_song.song || artist !== current_song.artist) {
+      current_song.song = song;
+      current_song.artist = artist;
+      if (store.get("send_notification", "off") === "on") {
+        sendNotification(current_song);
         }
-      }
-      tray.setTitle(format_track(res[0], res[1]));
-    })
-    .catch((err) => {
-      console.debug(err)
-    })
-  }, 2500);
-}
-
-function displaySong() {
-  getCurrentSongOnce({store, spot_instance}).then((res) => tray.setTitle(format_track(res[0], res[1])));
+        console.log("Song name js:", String(song), "js");
+          tray.setTitle(format_track(song, artist));
+        console.log("Setting tray");
+    }
+  }
+  console.log("On song JS")
+  try{
+    MediaSubscriber.subscribe(updateSong)
+  } catch(e){
+    console.log(e)
+  }
+  console.log("Subscribed js")
 }
 
 // Main process
@@ -582,13 +577,13 @@ ipcMain.handle('get-song', async (event, args) => {
 })
 
 ipcMain.on('play-previous', (event, args) => {
-  playPrevious({store, spot_instance});
+  playPrevious({ store, spot_instance });
 })
 
 // Return false on failure
 ipcMain.handle('toggle-play', async (event, args) => {
-  try{
-    await togglePlay({store, spot_instance});
+  try {
+    await togglePlay({ store, spot_instance });
     return true;
   } catch {
     return false;
@@ -596,11 +591,11 @@ ipcMain.handle('toggle-play', async (event, args) => {
 })
 
 ipcMain.on('play-next', (event, args) => {
-  playNext({store, spot_instance})
+  playNext({ store, spot_instance })
 })
 
 ipcMain.handle('get-state', async (event, args) => {
-  return await getState({store});
+  return await getState({ store });
 })
 
 ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
