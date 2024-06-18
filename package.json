@@ -8,7 +8,13 @@
     "start": "NODE_ENV=development electron-forge start",
     "prod": "NODE_ENV=production electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "install": "cmake-js compile"
+  },
+  "binary": {
+    "napi_versions": [
+      7
+    ]
   },
   "author": "Athanasios Taprantzis",
   "license": "ISC",
@@ -25,23 +31,25 @@
   "dependencies": {
     "axios": "^1.7.2",
     "bindings": "^1.5.0",
+    "cmake-js": "^7.3.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
     "express": "^4.18.1",
     "nan": "^2.20.0",
+    "node-addon-api": "*",
     "node-gyp": "^10.1.0",
-    "run-applescript": "^6.0.0",
-    "node-addon-api": "*"
+    "run-applescript": "^6.0.0"
   },
   "config": {
     "forge": {
       "packagerConfig": {
-        "asar": true,
+        "asar": false,
         "icon": "icons/app",
         "extraResource": [
           "./compiledFunctions",
           "./media",
-          "./widget"
+          "./widget",
+          "libMediaSubscriber.dylib"
         ],
         "extendInfo": {
           "LSUIElement": 1
