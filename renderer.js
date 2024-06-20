@@ -15,9 +15,28 @@ var main = document.getElementById("main")
 var backup = document.getElementById("backup")
 var preview = document.getElementById("preview")
 var preview_backup = document.getElementById("preview-backup")
+var main = document.getElementById("main")
+var top_bar = document.getElementById("top-bar")
+var media_buttons = document.getElementById("media-buttons")
+var gradient = document.getElementById("gradient")
 var paused = false;
 var closed = true
 
+main.addEventListener("mousemove", show)
+var func; 
+function show(e){
+  media_buttons.style.visibility = 'visible'
+  top_bar.style.visibility = 'visible'
+  gradient.style.visibility = 'visible'
+  if(func){
+    clearTimeout(func);
+  }
+  func = setTimeout(() => {
+    media_buttons.style.visibility = 'hidden'
+    top_bar.style.visibility = 'hidden'
+    gradient.style.visibility = 'hidden'
+  }, 2000)
+}
 
 function skipBack() {
   window.api.playPrevious();

@@ -7,15 +7,15 @@
   </head>
   <body>
     <div id = "main" class = "main">
-      <div class = "gradient"></div>
+      <div id="gradient" class = "gradient hideable"></div>
       <!-- Gradient should always stay on top to allow mouseenter
       events on other element.
       Otherwise it will overlap them all -->
-      <div id="top-bar" class="draggable focusable"></div>
+      <div id="top-bar" class="draggable focusable hideable"></div>
       <div id = "backup"></div>
       <div id = "preview"><div id = "preview-backup"></div></div>
       <div class = "sector" style = "top: 45px;">
-        <div class = "buttons interact">
+        <div id="media-buttons" class = "buttons interact hideable">
           <div class = "media-control">
             <button id = "skip-back" class = "btn btn-small focusable" onclick = "skipBack()"><div class = "hover-space"><div></div></div></button>
             <button id = "pause-play" class = "btn btn-large focusable" onclick = "pausePlay()"><div class = "hover-space"><div></div></div></button>

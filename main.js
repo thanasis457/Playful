@@ -58,7 +58,7 @@ function widget() {
   })
   widgetWindow.setPosition(config.properties.x, config.properties.y)
   widgetWindow.setVisibleOnAllWorkspaces(true);
-  widgetWindow.setIgnoreMouseEvents(true, { forward: true });
+  // widgetWindow.setIgnoreMouseEvents(true, { forward: true });
   widgetWindow.once("ready-to-show", () => {
     widgetWindow.show();
     app.dock.hide();

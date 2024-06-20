@@ -9,17 +9,17 @@ contextBridge.exposeInMainWorld('api', {
   onMediaChange: (callback) => ipcRenderer.on('update-song', (_event, value) => callback(value))
 })
 
-window.addEventListener('DOMContentLoaded', () => {
-  const interactiveElements = 
-  document.querySelectorAll('.focusable');
+// window.addEventListener('DOMContentLoaded', () => {
+//   const interactiveElements = 
+//   document.querySelectorAll('.focusable');
 
-  interactiveElements.forEach((element) => {
-      element.addEventListener('mouseenter', () => {
-          ipcRenderer.send('set-ignore-mouse-events', false);
-      });
+//   interactiveElements.forEach((element) => {
+//       element.addEventListener('mouseenter', () => {
+//           ipcRenderer.send('set-ignore-mouse-events', false);
+//       });
 
-      element.addEventListener('mouseleave', () => {
-          ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
-      });
-  });
-})
+//       element.addEventListener('mouseleave', () => {
+//           ipcRenderer.send('set-ignore-mouse-events', true, { forward: true });
+//       });
+//   });
+// })
