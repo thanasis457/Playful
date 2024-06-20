@@ -62,6 +62,7 @@ function widget() {
   widgetWindow.once("ready-to-show", () => {
     widgetWindow.show();
     app.dock.hide();
+    widgetWindow.webContents.send('update-song', current_song)
   })
   widgetWindow.loadFile(config.index)
   widgetWindow.on("closed", () => {
@@ -554,7 +555,7 @@ async function getCurrentSong() {
       current_song.name = name;
       current_song.artist = artist;
       tray.setTitle(format_track(name, artist));
-      widgetWindow.webContents.send('update-song', current_song)
+      if(widgetWindow) widgetWindow.webContents.send('update-song', current_song)
     }
   }
   console.log("On song JS")
@@ -562,6 +563,7 @@ async function getCurrentSong() {
     current_song.name = res[0];
     current_song.artist = res[1];
     tray.setTitle(format_track(res[0], res[1]));
+    if (widgetWindow) widgetWindow.webContents.send('update-song', current_song)
   })
     .catch((err) => {
       console.debug(err)
