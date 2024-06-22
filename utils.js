@@ -67,21 +67,28 @@ function format_trackID(trackID, spot_instance) {
             prevController.abort();
             prevController = new AbortController();
             console.log(trackID)
+            if (trackID.split(':').length < 3) {
+                throw ("Incorrect TrackID");
+            }
             return spot_instance
-        .get(`tracks/${trackID.split(':')[2]}`, { signal: prevController.signal })
-        .then((res) => {
-            if (res.status !== 200) {
-                    throw("Spotify thre error");
-                }
-                console.log("Fetched with Spotify API: ", res.data.album.images[0].url)
-                return res.data.album.images[0].url;
-            })
-            .catch((e) => {
-                console.log("Got-cover returned error.");
-                return ""
-            })
-        } catch {
-            return ""
+                .get(`tracks/${trackID.split(':')[2]}`, { signal: prevController.signal })
+                .then((res) => {
+                    if (res.status !== 200) {
+                        throw ("Spotify thre error");
+                    }
+                    console.log("Fetched with Spotify API: ", res.data.album.images[0].url)
+                    return res.data.album.images[0].url;
+                })
+                .catch((e) => {
+                    if (axios.isCancel(e)) {
+                        console.log('Request canceled', e.message);
+                    } else {
+                        getAlbumCoverArt();
+                    }
+                })
+        } catch(e) {
+            console.log(e)
+            return getAlbumCoverArt();
         }
         // Performs some preformatting but allows handoff of .then .catch to caller
         return axios.get(url, { signal: prevController.signal })
