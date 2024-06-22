@@ -24,7 +24,7 @@ struct Song {
     };
 };
 
-public typealias Ccallback = @convention(c)(UnsafePointer<CChar>, UnsafePointer<CChar>) -> Void
+public typealias Ccallback = @convention(c)(UnsafePointer<CChar>, UnsafePointer<CChar>, UnsafePointer<CChar>) -> Void
 
 class NowPlayingSubscriber: ObservableObject {
     var cb: Ccallback;
@@ -51,9 +51,10 @@ class NowPlayingSubscriber: ObservableObject {
             print(userInfo)
             if let name: Any = userInfo["Name"] {
                 if let artist: Any = userInfo["Artist"]{
-                    print(name as! String, artist as! String, "swift")
-                    cb(name as! String, artist as! String)
-                    
+                    if let trackID: Any = userInfo["Track ID"]{
+                        print(name as! String, artist as! String, trackID as! String, "swift")
+                        cb(name as! String, artist as! String, trackID as! String)
+                    }
                 }
             }
         }

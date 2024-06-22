@@ -8,7 +8,6 @@
 var song_title = document.getElementById("song-title")
 var song_artist = document.getElementById("song-artist")
 var pause_play = document.getElementById("pause-play")
-var album_cover = "../media/album-cover.jpg"
 var pause = `url("../media/pause.svg")`
 var play = `url("../media/play.svg")`
 var main = document.getElementById("main")
@@ -25,24 +24,22 @@ var closed = true
 main.addEventListener("mousemove", show)
 main.addEventListener("click", show)
 var timeout = 2000;
-var hideFunc = setTimeout(() => {
+function hide() {
   media_buttons.style.visibility = 'hidden'
   top_bar.style.visibility = 'hidden'
   gradient.style.visibility = 'hidden'
-}, timeout)
-
-function show(e){
+  preview.style.visibility = 'hidden'
+}
+var hideFunc = setTimeout(hide, timeout);
+function show(e) {
   media_buttons.style.visibility = 'visible'
   top_bar.style.visibility = 'visible'
   gradient.style.visibility = 'visible'
-  if (hideFunc){
+  preview.style.visibility = 'visible'
+  if (hideFunc) {
     clearTimeout(hideFunc);
   }
-  hideFunc = setTimeout(() => {
-    media_buttons.style.visibility = 'hidden'
-    top_bar.style.visibility = 'hidden'
-    gradient.style.visibility = 'hidden'
-  }, timeout)
+  hideFunc = setTimeout(hide, timeout)
 }
 
 function skipBack() {
@@ -76,31 +73,24 @@ let prev_data = {
   "pause": true,
 };
 
-setInterval(() => {
-  window.api.getState().then((res) => {
-    paused = !res;
-  });
-}, 3000)
+// setInterval(() => {
+//   window.api.getState().then((res) => {
+//     paused = !res;
+//   });
+// }, 3000)
 
 window.api.onMediaChange((song) => {
   song_title.innerText = song.name;
   song_artist.innerText = song.artist;
-  
-  // album_cover = cover;
 
-  // if (album_cover != prev_data.album_cover) {
-  //   prev_data.album_cover = album_cover;
-  //   main.style.background = `url("${album_cover}")`
-  //   var time = new Date().getTime()
-  //   main.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-  //   setTimeout(() => {
-  //     backup.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-  //   }, 500)
-  //   preview.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-  //   setTimeout(() => {
-  //     preview_backup.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-  //   }, 500)
-  // }
+  // Album-Cover Backend Call
+  window.api.getCover(song.trackID).then((album_cover) => {
+    console.log("Cover: ", album_cover)
+    main.style.background = `url("${album_cover}")`
+    main.style.setProperty("background-image", `url('${album_cover}`, "important")
+    preview_backup.style.setProperty("background-image", `url('${album_cover}`, "important")
+  }).catch((e) => {console.log("Error: ", e)});
+
   if (song_title.innerText.length >= 16) {
     song_title.style.animation = `loop-scroll ${song_title.innerText.length / 2}s linear infinite`
   }

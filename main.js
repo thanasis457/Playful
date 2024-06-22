@@ -31,6 +31,11 @@ const {
   getAlbumCoverArt,
 } = require("./mediaScripts.js");
 
+// Do not change the order of the three. Necessary for cyclic dependency.
+const store = new Store();
+module.exports.store = store;
+const { format_track, format_trackID } = require("./utils.js")
+
 const scope = [
   "user-read-currently-playing",
   "user-read-playback-state",
@@ -49,7 +54,7 @@ function widget() {
     focusable: true,
     type: "panel",
     alwaysOnTop: true,
-    opacity: 0.9,
+    opacity: 1,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       sandbox: false
@@ -81,7 +86,6 @@ function widget() {
 //   'source': 'spotify' | 'connect' | 'none'
 //   'send_notification' = false | true
 // }
-const store = new Store();
 
 let spot_instance = axios.create({});
 let auth_instance = null;
@@ -479,44 +483,6 @@ function getRefreshToken() {
   });
 }
 
-function format_track(song, artist) {
-  if (store.get("length", "short") == "long") {
-    let song_edited = song;
-    let artist_edited = artist;
-    if (song.length + artist.length > 40) {
-      if (artist.length > 16 && song.length > 24) {
-        artist_edited = artist.substr(0, 14) + "..";
-        song_edited = song.substr(0, 22) + "..";
-      } else if (artist.length > 16) {
-        artist_edited = artist.substr(0, 40 - song.length - 2) + "..";
-      } else {
-        song_edited = song.substr(0, 40 - artist.length - 2) + "..";
-      }
-    }
-    if (artist_edited == "") {
-      return song_edited;
-    }
-    return song_edited + " - " + artist_edited;
-  } else {
-    song_edited = song;
-    artist_edited = artist;
-    if (song.length + artist.length > 26) {
-      if (artist.length > 10 && song.length > 16) {
-        artist_edited = artist.substr(0, 8) + "..";
-        song_edited = song.substr(0, 14) + "..";
-      } else if (artist.length > 10) {
-        artist_edited = artist.substr(0, 26 - song.length - 2) + "..";
-      } else {
-        song_edited = song.substr(0, 26 - artist.length - 2) + "..";
-      }
-    }
-    if (artist_edited == "") {
-      return song_edited;
-    }
-    return song_edited + " - " + artist_edited;
-  }
-}
-
 async function sendNotification(current_song) {
   try {
     const albumUrl = current_song.cover;
@@ -549,16 +515,15 @@ let current_song = {
 }; //song, artist, album-cover
 
 async function getCurrentSong() {
-  function updateSong(name, artist) {
-    console.log("Updating song js")
-    if (name !== current_song.name || artist !== current_song.artist) {
+  function updateSong(name, artist, trackID) {
+    if (name !== current_song.name || artist !== current_song.artist || trackID !== current_song.trackID) {
       current_song.name = name;
       current_song.artist = artist;
+      current_song.trackID = trackID;
       tray.setTitle(format_track(name, artist));
-      if(widgetWindow) widgetWindow.webContents.send('update-song', current_song)
+      if (widgetWindow) widgetWindow.webContents.send('update-song', current_song)
     }
   }
-  console.log("On song JS")
   getCurrentSongOnce({ store, spot_instance }).then((res) => {
     current_song.name = res[0];
     current_song.artist = res[1];
@@ -569,7 +534,6 @@ async function getCurrentSong() {
       console.debug(err)
     })
   MediaSubscriber.subscribe(updateSong)
-  console.log("Subscribed js")
 }
 
 // Main process
@@ -604,4 +568,9 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   win.setIgnoreMouseEvents(ignore, options)
   // console.log("Ignoring: ", ignore)
+})
+
+ipcMain.handle('get-cover', (event, trackID, args) => {
+  console.log("IN HANDLER: ", trackID)
+  return format_trackID(trackID);
 })

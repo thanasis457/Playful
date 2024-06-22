@@ -1,12 +1,12 @@
 const { contextBridge, ipcRenderer } = require('electron')
-console.log("Hey")
 contextBridge.exposeInMainWorld('api', {
   getSong: async () => ipcRenderer.invoke('get-song'),
   playPrevious: () => ipcRenderer.send('play-previous'),
   playNext: () => ipcRenderer.send('play-next'),
   togglePlay: () => ipcRenderer.invoke('toggle-play'),
   getState: () => ipcRenderer.invoke('get-state'),
-  onMediaChange: (callback) => ipcRenderer.on('update-song', (_event, value) => callback(value))
+  onMediaChange: (callback) => ipcRenderer.on('update-song', (_event, value) => callback(value)),
+  getCover: (trackID) => ipcRenderer.invoke('get-cover', trackID)
 })
 
 // window.addEventListener('DOMContentLoaded', () => {

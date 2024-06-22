@@ -1,34 +1,38 @@
 #include <chrono>
 #include <thread>
 #include <napi.h>
-#include<string.h>
-#include<iostream>
+#include <string.h>
+#include <iostream>
 using namespace Napi;
 
 std::thread nativeThread;
 ThreadSafeFunction tsfn;
 
-extern "C" void callbackFunction(char *, char *);
-extern "C" void startSubscriber(void (*)(char *, char *));
+extern "C" void callbackFunction(char *, char *, char *);
+extern "C" void startSubscriber(void (*)(char *, char *, char *));
 
-struct Song{
+struct Song {
     char* name;
     char* artist;
+    char* trackID;
 };
 
-void jsCallbackHandler(Napi::Env env, Function jsCallback, Song *song){
+void jsCallbackHandler(Napi::Env env, Function jsCallback, Song *song) {
     // Transform native data into JS data, passing it to the provided
     // `jsCallback` -- the TSFN's JavaScript function.
     std::cout << song << " cppppp" << std::endl;
-    jsCallback.Call({Napi::String::New(env, song->name), Napi::String::New(env, song->artist)});
+    jsCallback.Call({Napi::String::New(env, song->name),
+                     Napi::String::New(env, song->artist),
+                     Napi::String::New(env, song->trackID)});
     free(song->name);
     free(song->artist);
+    free(song->trackID);
     free(song);
 }
 
-void callbackFunction(char *name, char *artist) {
+void callbackFunction(char* name, char* artist, char* trackID) {
     int count = 1;
-    std::cout<<name<<" song received cpp"<<std::endl;
+    std::cout << name << " song received cpp" << std::endl;
     // auto callback = [](Napi::Env env, Function jsCallback, Song* song)
     // {
     //     // We're finished with the data.
@@ -36,27 +40,26 @@ void callbackFunction(char *name, char *artist) {
 
     // Create new data
     // Perform a blocking call
-    char* nameM = (char*)std::malloc(strlen(name));
+    char* nameM = (char*)std::malloc(strlen(name) + 1);
     strcpy(nameM, name);
-    char *artistM = (char *)std::malloc(strlen(artist));
+    char* artistM = (char*)std::malloc(strlen(artist) + 1);
     strcpy(artistM, artist);
-    Song *song = (Song*) malloc(sizeof(Song));
+    char* trackIDM = (char*)std::malloc(strlen(trackID) + 1);
+    strcpy(trackIDM, trackID);
+    Song* song = (Song*)malloc(sizeof(Song));
     song->name = nameM;
     song->artist = artistM;
+    song->trackID = trackIDM;
     napi_status status = tsfn.BlockingCall(song, jsCallbackHandler);
-    
-
 
     // Release the thread-safe function
 }
-void threadEx()
-{
-    std::cout << "THREAD EX "<< std::endl;
+void threadEx() {
+    std::cout << "THREAD EX " << std::endl;
     startSubscriber(callbackFunction);
 }
 
-Value subscribe(const CallbackInfo &info)
-{
+Value subscribe(const CallbackInfo &info) {
     Napi::Env env = info.Env();
 
     // Create a ThreadSafeFunction
@@ -77,8 +80,7 @@ Value subscribe(const CallbackInfo &info)
     return Boolean::New(env, true);
 }
 
-Napi::Object Init(Napi::Env env, Object exports)
-{
+Napi::Object Init(Napi::Env env, Object exports) {
     exports.Set("subscribe", Function::New(env, subscribe));
     return exports;
 }
