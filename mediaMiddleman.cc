@@ -2,7 +2,6 @@
 #include <thread>
 #include <napi.h>
 #include <string.h>
-#include <iostream>
 using namespace Napi;
 
 std::thread nativeThread;
@@ -20,7 +19,6 @@ struct Song {
 void jsCallbackHandler(Napi::Env env, Function jsCallback, Song *song) {
     // Transform native data into JS data, passing it to the provided
     // `jsCallback` -- the TSFN's JavaScript function.
-    std::cout << song << " cppppp" << std::endl;
     jsCallback.Call({Napi::String::New(env, song->name),
                      Napi::String::New(env, song->artist),
                      Napi::String::New(env, song->trackID)});
@@ -32,7 +30,6 @@ void jsCallbackHandler(Napi::Env env, Function jsCallback, Song *song) {
 
 void callbackFunction(char* name, char* artist, char* trackID) {
     int count = 1;
-    std::cout << name << " song received cpp" << std::endl;
     // auto callback = [](Napi::Env env, Function jsCallback, Song* song)
     // {
     //     // We're finished with the data.
@@ -53,10 +50,6 @@ void callbackFunction(char* name, char* artist, char* trackID) {
     napi_status status = tsfn.BlockingCall(song, jsCallbackHandler);
 
     // Release the thread-safe function
-}
-void threadEx() {
-    std::cout << "THREAD EX " << std::endl;
-    startSubscriber(callbackFunction);
 }
 
 Value subscribe(const CallbackInfo &info) {

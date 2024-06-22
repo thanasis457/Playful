@@ -7,8 +7,6 @@ function getCurrentSongOnce({ store, spot_instance }) {
       if (res === "running") {
         runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
           res = res.split("+").slice(0, 2);
-          console.log(res[0]);
-          console.log(res[1]);
           res.push(null);
           resolve(res);
         });

@@ -1,10 +1,3 @@
-
-// MediaController("result", (result) => {
-//   var result = JSON.parse(result.replace(/'(?=(?:(?:[^"]*"){2})*[^"]*$)/g, "\""))
-//   console.log(result)
-// })
-
-
 var song_title = document.getElementById("song-title")
 var song_artist = document.getElementById("song-artist")
 var pause_play = document.getElementById("pause-play")
@@ -85,11 +78,10 @@ window.api.onMediaChange((song) => {
 
   // Album-Cover Backend Call
   window.api.getCover(song.trackID).then((album_cover) => {
-    console.log("Cover: ", album_cover)
     main.style.background = `url("${album_cover}")`
     main.style.setProperty("background-image", `url('${album_cover}`, "important")
     preview_backup.style.setProperty("background-image", `url('${album_cover}`, "important")
-  }).catch((e) => {console.log("Error: ", e)});
+  });
 
   if (song_title.innerText.length >= 16) {
     song_title.style.animation = `loop-scroll ${song_title.innerText.length / 2}s linear infinite`

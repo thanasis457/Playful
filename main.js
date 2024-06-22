@@ -538,7 +538,6 @@ async function getCurrentSong() {
 
 // Main process
 ipcMain.handle('get-song', async (event, args) => {
-  // console.debug(current_song)
   return current_song;
 })
 
@@ -567,10 +566,8 @@ ipcMain.handle('get-state', async (event, args) => {
 ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   win.setIgnoreMouseEvents(ignore, options)
-  // console.log("Ignoring: ", ignore)
 })
 
 ipcMain.handle('get-cover', async (event, trackID, args) => {
-  console.log("IN HANDLER: ", trackID)
   return await format_trackID(trackID, spot_instance);
 })
