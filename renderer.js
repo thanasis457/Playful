@@ -24,7 +24,7 @@ function hide() {
   preview.style.visibility = 'hidden'
 }
 var hideFunc = setTimeout(hide, timeout);
-function show(e) {
+function show() {
   media_buttons.style.visibility = 'visible'
   top_bar.style.visibility = 'visible'
   gradient.style.visibility = 'visible'
@@ -37,27 +37,13 @@ function show(e) {
 
 function skipBack() {
   window.api.playPrevious();
-  paused = false;
 }
 async function pausePlay() {
-  if (!closed) {
-    if (await window.api.togglePlay()) {
-      if (paused) {
-        paused = false
-      }
-      else {
-        paused = true
-      }
-    }
-  }
+  window.api.togglePlay()
 }
 function skipForward() {
   window.api.playNext();
-  paused = false
 }
-
-var previous_timer = [0, 0]
-var previous_result = [0, 0]
 
 let prev_data = {
   "song": "",
@@ -66,11 +52,17 @@ let prev_data = {
   "pause": true,
 };
 
-// setInterval(() => {
-//   window.api.getState().then((res) => {
-//     paused = !res;
-//   });
-// }, 3000)
+window.api.onPlayerStateChange((song) => {
+  show();
+  if (!song.playing) {
+    pause_play.style.backgroundImage = play
+    pause_play.childNodes[0].childNodes[0].style.backgroundImage = play
+  }
+  else {
+    pause_play.style.backgroundImage = pause
+    pause_play.childNodes[0].childNodes[0].style.backgroundImage = pause
+  }
+});
 
 window.api.onMediaChange((song) => {
   song_title.innerText = song.name;
@@ -111,17 +103,3 @@ window.api.onMediaChange((song) => {
     }
   }
 })
-// setInterval(async () => {
-
-//   if (paused != prev_data.pause) {
-//     prev_data.pause = paused;
-//     if (paused) {
-//       pause_play.style.backgroundImage = play
-//       pause_play.childNodes[0].childNodes[0].style.backgroundImage = play
-//     }
-//     else {
-//       pause_play.style.backgroundImage = pause
-//       pause_play.childNodes[0].childNodes[0].style.backgroundImage = pause
-//     }
-//   }
-// }, 1000)

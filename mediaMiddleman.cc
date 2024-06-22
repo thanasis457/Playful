@@ -7,13 +7,14 @@ using namespace Napi;
 std::thread nativeThread;
 ThreadSafeFunction tsfn;
 
-extern "C" void callbackFunction(char *, char *, char *);
-extern "C" void startSubscriber(void (*)(char *, char *, char *));
+extern "C" void callbackFunction(char *, char *, char *, bool);
+extern "C" void startSubscriber(void (*)(char *, char *, char *, bool));
 
 struct Song {
     char* name;
     char* artist;
     char* trackID;
+    bool playing;
 };
 
 void jsCallbackHandler(Napi::Env env, Function jsCallback, Song *song) {
@@ -21,14 +22,15 @@ void jsCallbackHandler(Napi::Env env, Function jsCallback, Song *song) {
     // `jsCallback` -- the TSFN's JavaScript function.
     jsCallback.Call({Napi::String::New(env, song->name),
                      Napi::String::New(env, song->artist),
-                     Napi::String::New(env, song->trackID)});
+                     Napi::String::New(env, song->trackID),
+                     Napi::Boolean::New(env, song->playing)});
     free(song->name);
     free(song->artist);
     free(song->trackID);
     free(song);
 }
 
-void callbackFunction(char* name, char* artist, char* trackID) {
+void callbackFunction(char* name, char* artist, char* trackID, bool playing) {
     int count = 1;
     // auto callback = [](Napi::Env env, Function jsCallback, Song* song)
     // {
@@ -47,6 +49,7 @@ void callbackFunction(char* name, char* artist, char* trackID) {
     song->name = nameM;
     song->artist = artistM;
     song->trackID = trackIDM;
+    song->playing = playing;
     napi_status status = tsfn.BlockingCall(song, jsCallbackHandler);
 
     // Release the thread-safe function

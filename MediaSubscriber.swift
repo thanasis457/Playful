@@ -14,7 +14,7 @@
 import Foundation
 import Darwin.C
 
-public typealias Ccallback = @convention(c)(UnsafePointer<CChar>, UnsafePointer<CChar>, UnsafePointer<CChar>) -> Void
+public typealias Ccallback = @convention(c)(UnsafePointer<CChar>, UnsafePointer<CChar>, UnsafePointer<CChar>, CBool) -> Void
 
 class NowPlayingSubscriber: ObservableObject {
     var cb: Ccallback;
@@ -37,9 +37,11 @@ class NowPlayingSubscriber: ObservableObject {
     func nowPlayingInfoChanged(notification: NSNotification) {
         if let userInfo = notification.userInfo{
             if let name: Any = userInfo["Name"] {
-                if let artist: Any = userInfo["Artist"]{
-                    if let trackID: Any = userInfo["Track ID"]{
-                        cb(name as! String, artist as! String, trackID as! String)
+                if let artist: Any = userInfo["Artist"] {
+                    if let trackID: Any = userInfo["Track ID"] {
+                        if let playing: Any = userInfo["Player State"] {
+                        cb(name as! String, artist as! String, trackID as! String, playing as! String == "Playing")
+                        }
                     }
                 }
             }

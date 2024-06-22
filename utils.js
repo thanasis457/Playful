@@ -79,9 +79,9 @@ function format_trackID(trackID, spot_instance) {
                 })
                 .catch((e) => {
                     if (axios.isCancel(e)) {
-                        // console.log('Request canceled', e.message);
+                        console.debug('Request canceled', e.message);
                     } else {
-                        getAlbumCoverArt();
+                        return getAlbumCoverArt();
                     }
                 })
         } catch(e) {

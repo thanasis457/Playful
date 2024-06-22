@@ -75,7 +75,7 @@ function widget() {
   widgetWindow.once("ready-to-show", () => {
     widgetWindow.show();
     app.dock.hide();
-    widgetWindow.webContents.send('update-song', current_song)
+    startUpFetch();
   })
   widgetWindow.loadFile(config.index)
   widgetWindow.on("closed", () => {
@@ -512,10 +512,35 @@ let current_song = {
   trackID: "",
   album: "",
   playing: false,
+  setUp: false, //Whether the current_song has been populated
 }; //song, artist, album-cover
 
+// First time set-up (no event has been triggered)
+function startUpFetch(){
+  //Check if song is already loaded
+  if (current_song.setUp){
+    if (widgetWindow){
+      widgetWindow.webContents.send('update-song', current_song);
+      widgetWindow.webContents.send('update-player-state', current_song);
+    }
+    return;
+  }
+  Promise.all([getCurrentSongOnce({ store, spot_instance }), getState({ store })]).then(([res, playing]) => {
+    current_song.name = res[0];
+    current_song.artist = res[1];
+    current_song.playing = playing;
+    tray.setTitle(format_track(res[0], res[1]));
+    current_song.setUp = true;
+    if (widgetWindow) {
+      widgetWindow.webContents.send('update-song', current_song);
+      widgetWindow.webContents.send('update-player-state', current_song);
+    }
+  }) .catch((err) => {
+    console.debug(err)
+  })
+}
 async function getCurrentSong() {
-  function updateSong(name, artist, trackID) {
+  function updateSong(name, artist, trackID, playing) {
     if (name !== current_song.name || artist !== current_song.artist || trackID !== current_song.trackID) {
       current_song.name = name;
       current_song.artist = artist;
@@ -523,16 +548,13 @@ async function getCurrentSong() {
       tray.setTitle(format_track(name, artist));
       if (widgetWindow) widgetWindow.webContents.send('update-song', current_song)
     }
+    if (playing !== current_song.playing) {
+      current_song.playing = playing;
+      if (widgetWindow) widgetWindow.webContents.send('update-player-state', current_song)
+    }
   }
-  getCurrentSongOnce({ store, spot_instance }).then((res) => {
-    current_song.name = res[0];
-    current_song.artist = res[1];
-    tray.setTitle(format_track(res[0], res[1]));
-    if (widgetWindow) widgetWindow.webContents.send('update-song', current_song)
-  })
-    .catch((err) => {
-      console.debug(err)
-    })
+  
+  startUpFetch();
   MediaSubscriber.subscribe(updateSong)
 }
 

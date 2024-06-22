@@ -5,8 +5,9 @@ contextBridge.exposeInMainWorld('api', {
   playNext: () => ipcRenderer.send('play-next'),
   togglePlay: () => ipcRenderer.invoke('toggle-play'),
   getState: () => ipcRenderer.invoke('get-state'),
+  getCover: (trackID) => ipcRenderer.invoke('get-cover', trackID),
   onMediaChange: (callback) => ipcRenderer.on('update-song', (_event, value) => callback(value)),
-  getCover: (trackID) => ipcRenderer.invoke('get-cover', trackID)
+  onPlayerStateChange: (callback) => ipcRenderer.on('update-player-state', (_event, value) => callback(value)),
 })
 
 // window.addEventListener('DOMContentLoaded', () => {
