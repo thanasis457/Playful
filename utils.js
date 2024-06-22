@@ -39,43 +39,56 @@ function format_track(song, artist) {
         return song_edited + " - " + artist_edited;
     }
 }
-let prevController = new AbortController();
-// Returns the Album URL from the trackID
-let albumRetrieve;
-function format_trackID(trackID) {
-    // Apple Script provides better quality
-    // if (albumRetrieve){
-    //     clearTimeout(albumRetrieve[0]);
-    //     try{
-    //         albumRetrieve[1]()
-    //     } catch(e){
-    //         console.log("err: ", e)
-    //     }
-    // };
-    // return new Promise((resolve, reject) => {
-    //     albumRetrieve = [setTimeout(() => {
-    //         getAlbumCoverArt().then((response) => resolve(response))
-    //     }, 500), reject];
-    // });
-    // setTimeout(getAlbumCoverArt, 500)
-    
-    return getAlbumCoverArt();
-    
-    try {
-        prevController.abort();
-    } catch { }
-    // Found here: https://stackoverflow.com/questions/10123804/retrieve-cover-artwork-using-spotify-api
-    const baseURL = "https://embed.spotify.com/oembed/?url=";
-    const url = baseURL + trackID;
-    console.log("Formatting: ", trackID)
-    console.log("Getting response: ", url)
-    prevController = new AbortController();
 
-    // Performs some preformatting but allows handoff of .then .catch to caller
-    return axios.get(url, { signal: prevController.signal })
-        .then((response) => {
-            return response.data.thumbnail_url;
-        })
+let prevController = new AbortController();
+// let albumRetrieve;
+// Returns the Album URL from the trackID
+function format_trackID(trackID, spot_instance) {
+    if (store.get("source", "spotify") == "spotify") {
+        // Apple Script provides better quality
+        // if (albumRetrieve){
+        //     clearTimeout(albumRetrieve[0]);
+        //     try{
+        //         albumRetrieve[1]()
+        //     } catch(e){
+        //         console.log("err: ", e)
+        //     }
+        // };
+        // return new Promise((resolve, reject) => {
+        //     albumRetrieve = [setTimeout(() => {
+        //         getAlbumCoverArt().then((response) => resolve(response))
+        //     }, 500), reject];
+        // });
+        // setTimeout(getAlbumCoverArt, 500)
+        console.log("Fetching with apple script")
+        return getAlbumCoverArt();
+    } else if (store.get("source", "spotify") == "connect") {
+        try {
+            prevController.abort();
+            prevController = new AbortController();
+            console.log(trackID)
+            return spot_instance
+        .get(`tracks/${trackID.split(':')[2]}`, { signal: prevController.signal })
+        .then((res) => {
+            if (res.status !== 200) {
+                    throw("Spotify thre error");
+                }
+                console.log("Fetched with Spotify API: ", res.data.album.images[0].url)
+                return res.data.album.images[0].url;
+            })
+            .catch((e) => {
+                console.log("Got-cover returned error.");
+                return ""
+            })
+        } catch {
+            return ""
+        }
+        // Performs some preformatting but allows handoff of .then .catch to caller
+        return axios.get(url, { signal: prevController.signal })
+            .then((response) => {
+                return response.data.thumbnail_url;
+            })
+    }
 }
 
 module.exports.format_track = format_track;

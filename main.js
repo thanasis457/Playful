@@ -32,6 +32,14 @@ const {
 } = require("./mediaScripts.js");
 
 // Do not change the order of the three. Necessary for cyclic dependency.
+// Store will be like:
+// {
+//   'refresh_token': ...,
+//   'widget': 'hide' | 'show',
+//   'length': 'short' | 'long',
+//   'source': 'spotify' | 'connect' | 'none'
+//   'send_notification' = false | true
+// }
 const store = new Store();
 module.exports.store = store;
 const { format_track, format_trackID } = require("./utils.js")
@@ -39,7 +47,7 @@ const { format_track, format_trackID } = require("./utils.js")
 const scope = [
   "user-read-currently-playing",
   "user-read-playback-state",
-  "user-modify-playback-state",
+  // "user-modify-playback-state",
 ];
 
 let widgetWindow = null;
@@ -78,14 +86,6 @@ function widget() {
   // main.openDevTools();
 }
 
-// Store will be like:
-// {
-//   'refresh_token': ...,
-//   'widget': 'hide' | 'show',
-//   'length': 'short' | 'long',
-//   'source': 'spotify' | 'connect' | 'none'
-//   'send_notification' = false | true
-// }
 
 let spot_instance = axios.create({});
 let auth_instance = null;
@@ -570,7 +570,7 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   // console.log("Ignoring: ", ignore)
 })
 
-ipcMain.handle('get-cover', (event, trackID, args) => {
+ipcMain.handle('get-cover', async (event, trackID, args) => {
   console.log("IN HANDLER: ", trackID)
-  return format_trackID(trackID);
+  return await format_trackID(trackID, spot_instance);
 })
