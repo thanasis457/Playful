@@ -274,7 +274,7 @@ app.whenReady().then(() => {
           ],
         },
         {
-          label: "Source",
+          label: "Album Cover Source",
           type: "submenu",
           submenu: [
             {
@@ -305,28 +305,28 @@ app.whenReady().then(() => {
             },
           ],
         },
-        {
-          label: "Send Notification On Change",
-          type: "submenu",
-          submenu: [
-            {
-              label: "Off",
-              type: "radio",
-              click() {
-                store.set("send_notification", "off");
-              },
-              checked: store.get("send_notification", "off") === "off",
-            },
-            {
-              label: "On",
-              type: "radio",
-              click() {
-                store.set("send_notification", "on");
-              },
-              checked: store.get("send_notification", "off") === "on",
-            },
-          ],
-        },
+        // {
+        //   label: "Send Notification On Change",
+        //   type: "submenu",
+        //   submenu: [
+        //     {
+        //       label: "Off",
+        //       type: "radio",
+        //       click() {
+        //         store.set("send_notification", "off");
+        //       },
+        //       checked: store.get("send_notification", "off") === "off",
+        //     },
+        //     {
+        //       label: "On",
+        //       type: "radio",
+        //       click() {
+        //         store.set("send_notification", "on");
+        //       },
+        //       checked: store.get("send_notification", "off") === "on",
+        //     },
+        //   ],
+        // },
       ],
     },
     {
