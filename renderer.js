@@ -23,19 +23,26 @@ var paused = false;
 var closed = true
 
 main.addEventListener("mousemove", show)
-var func; 
+main.addEventListener("click", show)
+var timeout = 2000;
+var hideFunc = setTimeout(() => {
+  media_buttons.style.visibility = 'hidden'
+  top_bar.style.visibility = 'hidden'
+  gradient.style.visibility = 'hidden'
+}, timeout)
+
 function show(e){
   media_buttons.style.visibility = 'visible'
   top_bar.style.visibility = 'visible'
   gradient.style.visibility = 'visible'
-  if(func){
-    clearTimeout(func);
+  if (hideFunc){
+    clearTimeout(hideFunc);
   }
-  func = setTimeout(() => {
+  hideFunc = setTimeout(() => {
     media_buttons.style.visibility = 'hidden'
     top_bar.style.visibility = 'hidden'
     gradient.style.visibility = 'hidden'
-  }, 2000)
+  }, timeout)
 }
 
 function skipBack() {
@@ -79,21 +86,21 @@ window.api.onMediaChange((song) => {
   song_title.innerText = song.name;
   song_artist.innerText = song.artist;
   
-  album_cover = cover;
+  // album_cover = cover;
 
-  if (album_cover != prev_data.album_cover) {
-    prev_data.album_cover = album_cover;
-    main.style.background = `url("${album_cover}")`
-    var time = new Date().getTime()
-    main.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-    setTimeout(() => {
-      backup.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-    }, 500)
-    preview.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-    setTimeout(() => {
-      preview_backup.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
-    }, 500)
-  }
+  // if (album_cover != prev_data.album_cover) {
+  //   prev_data.album_cover = album_cover;
+  //   main.style.background = `url("${album_cover}")`
+  //   var time = new Date().getTime()
+  //   main.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
+  //   setTimeout(() => {
+  //     backup.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
+  //   }, 500)
+  //   preview.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
+  //   setTimeout(() => {
+  //     preview_backup.style.setProperty("background-image", `url('${album_cover}?v=` + time + "')", "important")
+  //   }, 500)
+  // }
   if (song_title.innerText.length >= 16) {
     song_title.style.animation = `loop-scroll ${song_title.innerText.length / 2}s linear infinite`
   }

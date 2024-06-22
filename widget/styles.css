@@ -212,7 +212,7 @@ p {
   position: absolute;
   margin: 0;
   padding: 0;
-  width: 130px;
+  width: 110px;
   height: 45px;
   overflow-x: hidden;
   white-space: nowrap;
@@ -243,10 +243,10 @@ p {
     transform: translateX(0);
   }
   50% {
-    transform: translateX(calc(130px - 100%));
+    transform: translateX(calc(110px - 100%));
   }
   70% {
-    transform: translateX(calc(130px - 100%));
+    transform: translateX(calc(110px - 100%));
   }
   100% {
     transform: translateX(0);
