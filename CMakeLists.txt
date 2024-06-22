@@ -48,6 +48,19 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_INSTALL_NAME_TOOL} -change "libMediaSubscriber.dylib" "@loader_path/libMediaSubscriber.dylib" MediaSubscriber.node
 )
 
+set(SWIFT_SOURCES ${CMAKE_SOURCE_DIR}/mediaSubscriber.swift)
+set(SWIFT_OUTPUT ${CMAKE_SOURCE_DIR}/libMediaSubscriber.dylib)
+add_custom_command(
+    OUTPUT ${SWIFT_OUTPUT}
+    COMMAND swiftc -emit-library ${SWIFT_SOURCES} -o ${SWIFT_OUTPUT}
+    DEPENDS ${SWIFT_SOURCES}
+    COMMENT "Compiling Swift code"
+)
+
+add_custom_target(SwiftCode ALL DEPENDS ${SWIFT_OUTPUT})
+
+add_dependencies(${PROJECT_NAME} SwiftCode)
+
 
 message("NAN_DIR: ${NAN_DIR}")
 message("NODE_ADDON_API_INCLUDE_DIR: ${NODE_ADDON_API_INCLUDE_DIR}")
