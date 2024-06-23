@@ -6,3 +6,4 @@ package-lock.json
 bin/
 build/
 .vscode/
+libMediaSubscriber.dylib
