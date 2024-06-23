@@ -14,11 +14,11 @@ const sensitive = require("./sensitive.json");
 const Store = require("electron-store");
 const axios = require("axios");
 const path = require("path");
+const crypto = require("crypto");
 const config = require(path.join(__dirname, "./config.json"))
 const url = require("url");
 const MediaSubscriber = require("bindings")("MediaSubscriber.node")
 const client_id = sensitive.client_id;
-const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
 const uri_port = sensitive.uri_port;
 const {
@@ -95,6 +95,7 @@ let timer = null;
 let refresh_token = null;
 
 let code = null;
+let codeVerifier = null;
 let access_token = null;
 
 const createWindow = () => {
@@ -131,7 +132,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-async function handleSignIn() {
+function handleSignIn() {
   return new Promise((resolve, reject) => {
     try {
       if (store.get("refresh_token")) {
@@ -357,7 +358,7 @@ app.whenReady().then(() => {
   if (store.get('widget', 'hide') === 'show') widget();
 });
 
-async function startServer() {
+function startServer() {
   return new Promise((resolve) => {
     const express = require("express");
     const server = express();
@@ -383,13 +384,34 @@ async function startServer() {
 }
 
 async function getCode(mainWindow) {
+  console.log("In code")
+  const generateRandomString = (length) => {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const values = crypto.getRandomValues(new Uint8Array(length));
+    return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+  }
+
+  codeVerifier = generateRandomString(64);
+  const sha256 = async (plain) => {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(plain)
+    return crypto.subtle.digest('SHA-256', data)
+  }
+  const base64encode = (input) => {
+    return btoa(String.fromCharCode(...new Uint8Array(input)))
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+  }
+  const hashed = await sha256(codeVerifier)
+  const codeChallenge = base64encode(hashed);
   await startServer();
   setTimeout(() => server_instance.close(), 60000);
   try {
     await mainWindow.loadURL(
       `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=${scope.join(
         ","
-      )}`
+      )}&code_challenge_method=S256&code_challenge=${codeChallenge}`
     );
   } catch (e) {
     console.log("Failed to load window");
@@ -405,15 +427,14 @@ function getAccessToken() {
       baseURL: "https://accounts.spotify.com/",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          new Buffer(client_id + ":" + client_secret).toString("base64"),
       },
     });
     const params = new url.URLSearchParams({
       grant_type: "authorization_code",
       code: code,
       redirect_uri: redirect_uri,
+      client_id: client_id,
+      code_verifier: codeVerifier,
     });
     auth_instance
       .post("api/token", params.toString())
@@ -449,14 +470,12 @@ function getRefreshToken() {
       baseURL: "https://accounts.spotify.com/",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          new Buffer(client_id + ":" + client_secret).toString("base64"),
       },
     });
     const params = new url.URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: refresh_token,
+      client_id: client_id,
     });
     auth_instance
       .post("api/token", params.toString())
