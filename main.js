@@ -14,10 +14,11 @@ const sensitive = require("./sensitive.json");
 const Store = require("electron-store");
 const axios = require("axios");
 const path = require("path");
+const crypto = require("crypto");
 const config = require(path.join(__dirname, "./config.json"))
 const url = require("url");
+const MediaSubscriber = require("bindings")("MediaSubscriber.node")
 const client_id = sensitive.client_id;
-const client_secret = sensitive.client_secret;
 const redirect_uri = sensitive.redirect_uri;
 const uri_port = sensitive.uri_port;
 const {
@@ -30,10 +31,23 @@ const {
   getAlbumCoverArt,
 } = require("./mediaScripts.js");
 
+// Do not change the order of the three. Necessary for cyclic dependency.
+// Store will be like:
+// {
+//   'refresh_token': ...,
+//   'widget': 'hide' | 'show',
+//   'length': 'short' | 'long',
+//   'source': 'spotify' | 'connect' | 'none'
+//   'send_notification' = false | true
+// }
+const store = new Store();
+module.exports.store = store;
+const { format_track, format_trackID } = require("./utils.js")
+
 const scope = [
   "user-read-currently-playing",
   "user-read-playback-state",
-  "user-modify-playback-state",
+  // "user-modify-playback-state",
 ];
 
 let widgetWindow = null;
@@ -48,7 +62,7 @@ function widget() {
     focusable: true,
     type: "panel",
     alwaysOnTop: true,
-    opacity: 0.9,
+    opacity: 1,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       sandbox: false
@@ -57,29 +71,21 @@ function widget() {
   })
   widgetWindow.setPosition(config.properties.x, config.properties.y)
   widgetWindow.setVisibleOnAllWorkspaces(true);
-  widgetWindow.setIgnoreMouseEvents(true, {forward: true});
+  // widgetWindow.setIgnoreMouseEvents(true, { forward: true });
   widgetWindow.once("ready-to-show", () => {
-      widgetWindow.show();
-      app.dock.hide();
+    widgetWindow.show();
+    app.dock.hide();
+    startUpFetch();
   })
   widgetWindow.loadFile(config.index)
   widgetWindow.on("closed", () => {
     app.dock.hide();
     widgetWindow = null;
-    
+
   })
   // main.openDevTools();
 }
 
-// Store will be like:
-// {
-//   'refresh_token': ...,
-//   'widget': 'hide' | 'show',
-//   'length': 'short' | 'long',
-//   'source': 'spotify' | 'connect' | 'none'
-//   'send_notification' = false | true
-// }
-const store = new Store();
 
 let spot_instance = axios.create({});
 let auth_instance = null;
@@ -89,6 +95,7 @@ let timer = null;
 let refresh_token = null;
 
 let code = null;
+let codeVerifier = null;
 let access_token = null;
 
 const createWindow = () => {
@@ -125,12 +132,12 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-async function handleSignIn() {
+function handleSignIn() {
   return new Promise((resolve, reject) => {
     try {
       if (store.get("refresh_token")) {
         refresh_token = store.get("refresh_token");
-        console.log("Got refresh");
+        console.log("Got refresh", refresh_token);
         getRefreshToken()
           .then(() => {
             resolve();
@@ -184,21 +191,21 @@ app.whenReady().then(() => {
       label: "Play / Pause",
       type: "normal",
       click() {
-        togglePlay({store, spot_instance});
+        togglePlay({ store, spot_instance });
       },
     },
     {
       label: "Next",
       type: "normal",
       click() {
-        playNext({store, spot_instance}).then(() => displaySong());
+        playNext({ store, spot_instance });
       },
     },
     {
       label: "Previous",
       type: "normal",
       click() {
-        playPrevious({store, spot_instance}).then(() => displaySong());
+        playPrevious({ store, spot_instance });
       },
     },
     {
@@ -224,7 +231,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("widget", "hide");
-                if(widgetWindow) {
+                if (widgetWindow) {
                   widgetWindow.close();
                 }
               },
@@ -234,7 +241,7 @@ app.whenReady().then(() => {
               label: "Show",
               type: "radio",
               click() {
-                if(!widgetWindow){
+                if (!widgetWindow) {
                   widget();
                 }
                 store.set("widget", "show");
@@ -252,6 +259,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("length", "short");
+                tray.setTitle(format_track(current_song.name, current_song.artist));
               },
               checked: store.get("length", "short") === "short",
             },
@@ -260,13 +268,14 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 store.set("length", "long");
+                tray.setTitle(format_track(current_song.name, current_song.artist));
               },
               checked: store.get("length", "short") === "long",
             },
           ],
         },
         {
-          label: "Source",
+          label: "Album Cover Source",
           type: "submenu",
           submenu: [
             {
@@ -297,28 +306,28 @@ app.whenReady().then(() => {
             },
           ],
         },
-        {
-          label: "Send Notification On Change",
-          type: "submenu",
-          submenu: [
-            {
-              label: "Off",
-              type: "radio",
-              click() {
-                store.set("send_notification", "off");
-              },
-              checked: store.get("send_notification", "off") === "off",
-            },
-            {
-              label: "On",
-              type: "radio",
-              click() {
-                store.set("send_notification", "on");
-              },
-              checked: store.get("send_notification", "off") === "on",
-            },
-          ],
-        },
+        // {
+        //   label: "Send Notification On Change",
+        //   type: "submenu",
+        //   submenu: [
+        //     {
+        //       label: "Off",
+        //       type: "radio",
+        //       click() {
+        //         store.set("send_notification", "off");
+        //       },
+        //       checked: store.get("send_notification", "off") === "off",
+        //     },
+        //     {
+        //       label: "On",
+        //       type: "radio",
+        //       click() {
+        //         store.set("send_notification", "on");
+        //       },
+        //       checked: store.get("send_notification", "off") === "on",
+        //     },
+        //   ],
+        // },
       ],
     },
     {
@@ -346,10 +355,10 @@ app.whenReady().then(() => {
       });
   }
   getCurrentSong();
-  if(store.get('widget', 'hide') === 'show') widget();
+  if (store.get('widget', 'hide') === 'show') widget();
 });
 
-async function startServer() {
+function startServer() {
   return new Promise((resolve) => {
     const express = require("express");
     const server = express();
@@ -375,13 +384,34 @@ async function startServer() {
 }
 
 async function getCode(mainWindow) {
+  console.log("In code")
+  const generateRandomString = (length) => {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const values = crypto.getRandomValues(new Uint8Array(length));
+    return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+  }
+
+  codeVerifier = generateRandomString(64);
+  const sha256 = async (plain) => {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(plain)
+    return crypto.subtle.digest('SHA-256', data)
+  }
+  const base64encode = (input) => {
+    return btoa(String.fromCharCode(...new Uint8Array(input)))
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+  }
+  const hashed = await sha256(codeVerifier)
+  const codeChallenge = base64encode(hashed);
   await startServer();
   setTimeout(() => server_instance.close(), 60000);
   try {
     await mainWindow.loadURL(
       `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=${scope.join(
         ","
-      )}`
+      )}&code_challenge_method=S256&code_challenge=${codeChallenge}`
     );
   } catch (e) {
     console.log("Failed to load window");
@@ -397,15 +427,14 @@ function getAccessToken() {
       baseURL: "https://accounts.spotify.com/",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          new Buffer(client_id + ":" + client_secret).toString("base64"),
       },
     });
     const params = new url.URLSearchParams({
       grant_type: "authorization_code",
       code: code,
       redirect_uri: redirect_uri,
+      client_id: client_id,
+      code_verifier: codeVerifier,
     });
     auth_instance
       .post("api/token", params.toString())
@@ -441,14 +470,12 @@ function getRefreshToken() {
       baseURL: "https://accounts.spotify.com/",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          new Buffer(client_id + ":" + client_secret).toString("base64"),
       },
     });
     const params = new url.URLSearchParams({
       grant_type: "refresh_token",
       refresh_token: refresh_token,
+      client_id: client_id,
     });
     auth_instance
       .post("api/token", params.toString())
@@ -456,6 +483,7 @@ function getRefreshToken() {
         access_token = res.data.access_token;
         timer = res.data.expires_in;
         console.log("Set timeout at, ", timer);
+        store.set("refresh_token", res.data.refresh_token);
         setTimeout(() => {
           getRefreshToken();
         }, timer * 1000);
@@ -473,44 +501,6 @@ function getRefreshToken() {
         reject(err);
       });
   });
-}
-
-function format_track(song, artist) {
-  if (store.get("length", "short") == "long") {
-    let song_edited = song;
-    let artist_edited = artist;
-    if (song.length + artist.length > 40) {
-      if (artist.length > 16 && song.length > 24) {
-        artist_edited = artist.substr(0, 14) + "..";
-        song_edited = song.substr(0, 22) + "..";
-      } else if (artist.length > 16) {
-        artist_edited = artist.substr(0, 40 - song.length - 2) + "..";
-      } else {
-        song_edited = song.substr(0, 40 - artist.length - 2) + "..";
-      }
-    }
-    if (artist_edited == "") {
-      return song_edited;
-    }
-    return song_edited + " - " + artist_edited;
-  } else {
-    song_edited = song;
-    artist_edited = artist;
-    if (song.length + artist.length > 26) {
-      if (artist.length > 10 && song.length > 16) {
-        artist_edited = artist.substr(0, 8) + "..";
-        song_edited = song.substr(0, 14) + "..";
-      } else if (artist.length > 10) {
-        artist_edited = artist.substr(0, 26 - song.length - 2) + "..";
-      } else {
-        song_edited = song.substr(0, 26 - artist.length - 2) + "..";
-      }
-    }
-    if (artist_edited == "") {
-      return song_edited;
-    }
-    return song_edited + " - " + artist_edited;
-  }
 }
 
 async function sendNotification(current_song) {
@@ -537,58 +527,70 @@ async function sendNotification(current_song) {
 }
 
 let current_song = {
-  song: "",
+  name: "",
   artist: "",
-  cover: "",
+  trackID: "",
+  album: "",
+  playing: false,
+  setUp: false, //Whether the current_song has been populated
 }; //song, artist, album-cover
 
-async function getCurrentSong() {
-  const interval = setInterval(() => {
-    getCurrentSongOnce({store, spot_instance}).then((res) => {
-      //Change in song detected. Update relevant vars
-      if (res[0] !== current_song.song || res[1] !== current_song.artist) {
-        current_song.song = res[0];
-        current_song.artist = res[1];
-        if(res[2] === null){
-          getAlbumCoverArt().then((cover) => {
-            current_song.cover = cover;
-            if (store.get("send_notification", "off") === "on") {
-              sendNotification(current_song);
-            }
-          })
-        } else {
-          current_song.cover = res[2];
-          if (store.get("send_notification", "off") === "on") {
-            sendNotification(current_song);
-          }
-        }
-      }
-      tray.setTitle(format_track(res[0], res[1]));
-    })
-    .catch((err) => {
-      console.debug(err)
-    })
-  }, 2500);
+// First time set-up (no event has been triggered)
+function startUpFetch(){
+  //Check if song is already loaded
+  if (current_song.setUp){
+    if (widgetWindow){
+      widgetWindow.webContents.send('update-song', current_song);
+      widgetWindow.webContents.send('update-player-state', current_song);
+    }
+    return;
+  }
+  Promise.all([getCurrentSongOnce({ store, spot_instance }), getState({ store })]).then(([res, playing]) => {
+    current_song.name = res[0];
+    current_song.artist = res[1];
+    current_song.playing = playing;
+    tray.setTitle(format_track(res[0], res[1]));
+    current_song.setUp = true;
+    if (widgetWindow) {
+      widgetWindow.webContents.send('update-song', current_song);
+      widgetWindow.webContents.send('update-player-state', current_song);
+    }
+  }) .catch((err) => {
+    console.debug(err)
+  })
 }
-
-function displaySong() {
-  getCurrentSongOnce({store, spot_instance}).then((res) => tray.setTitle(format_track(res[0], res[1])));
+async function getCurrentSong() {
+  function updateSong(name, artist, trackID, playing) {
+    if (name !== current_song.name || artist !== current_song.artist || trackID !== current_song.trackID) {
+      current_song.name = name;
+      current_song.artist = artist;
+      current_song.trackID = trackID;
+      tray.setTitle(format_track(name, artist));
+      if (widgetWindow) widgetWindow.webContents.send('update-song', current_song)
+    }
+    if (playing !== current_song.playing) {
+      current_song.playing = playing;
+      if (widgetWindow) widgetWindow.webContents.send('update-player-state', current_song)
+    }
+  }
+  
+  startUpFetch();
+  MediaSubscriber.subscribe(updateSong)
 }
 
 // Main process
 ipcMain.handle('get-song', async (event, args) => {
-  // console.debug(current_song)
   return current_song;
 })
 
 ipcMain.on('play-previous', (event, args) => {
-  playPrevious({store, spot_instance});
+  playPrevious({ store, spot_instance });
 })
 
 // Return false on failure
 ipcMain.handle('toggle-play', async (event, args) => {
-  try{
-    await togglePlay({store, spot_instance});
+  try {
+    await togglePlay({ store, spot_instance });
     return true;
   } catch {
     return false;
@@ -596,14 +598,18 @@ ipcMain.handle('toggle-play', async (event, args) => {
 })
 
 ipcMain.on('play-next', (event, args) => {
-  playNext({store, spot_instance})
+  playNext({ store, spot_instance })
 })
 
 ipcMain.handle('get-state', async (event, args) => {
-  return await getState({store});
+  return await getState({ store });
 })
 
 ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
   const win = BrowserWindow.fromWebContents(event.sender)
   win.setIgnoreMouseEvents(ignore, options)
+})
+
+ipcMain.handle('get-cover', async (event, trackID, args) => {
+  return await format_trackID(trackID, spot_instance);
 })

@@ -1,14 +1,20 @@
 {
   "name": "Playful",
-  "version": "3.0.0",
-  "description": "Shows the current playing song. Made to show spotify songs. No controls since keyboard is faster",
+  "version": "4.0.0",
+  "description": "Shows the current playing song. Made to show spotify songs.",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "NODE_ENV=development electron-forge start",
     "prod": "NODE_ENV=production electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "install": "cmake-js compile"
+  },
+  "binary": {
+    "napi_versions": [
+      7
+    ]
   },
   "author": "Athanasios Taprantzis",
   "license": "ISC",
@@ -19,21 +25,32 @@
     "@electron-forge/maker-rpm": "^6.0.0-beta.65",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.65",
     "@electron-forge/maker-zip": "^6.0.0-beta.65",
-    "electron": "^19.0.10"
+    "@electron/rebuild": "^3.6.0",
+    "electron": "^31.0.1"
   },
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.7.2",
+    "bindings": "^1.5.0",
+    "cmake-js": "^7.3.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
     "express": "^4.18.1",
+    "nan": "^2.20.0",
+    "node-addon-api": "*",
+    "node-gyp": "^10.1.0",
     "run-applescript": "^6.0.0"
   },
   "config": {
     "forge": {
       "packagerConfig": {
-        "asar": true,
+        "asar": false,
         "icon": "icons/app",
-        "extraResource": ["./compiledFunctions", "./media", "./widget"],
+        "extraResource": [
+          "./compiledFunctions",
+          "./media",
+          "./widget",
+          "libMediaSubscriber.dylib"
+        ],
         "extendInfo": {
           "LSUIElement": 1
         }

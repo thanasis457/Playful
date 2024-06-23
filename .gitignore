@@ -3,3 +3,6 @@ out/
 .DS_Store
 sensitive.json
 package-lock.json
+bin/
+build/
+.vscode/
