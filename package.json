@@ -1,7 +1,7 @@
 {
   "name": "Playful",
-  "version": "3.0.0",
-  "description": "Shows the current playing song. Made to show spotify songs. No controls since keyboard is faster",
+  "version": "4.0.0",
+  "description": "Shows the current playing song. Made to show spotify songs.",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
