@@ -137,7 +137,7 @@ function handleSignIn() {
     try {
       if (store.get("refresh_token")) {
         refresh_token = store.get("refresh_token");
-        console.log("Got refresh");
+        console.log("Got refresh", refresh_token);
         getRefreshToken()
           .then(() => {
             resolve();
@@ -483,6 +483,7 @@ function getRefreshToken() {
         access_token = res.data.access_token;
         timer = res.data.expires_in;
         console.log("Set timeout at, ", timer);
+        store.set("refresh_token", res.data.refresh_token);
         setTimeout(() => {
           getRefreshToken();
         }, timer * 1000);
