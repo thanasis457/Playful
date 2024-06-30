@@ -3,8 +3,12 @@
 A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
 ## Screenshots
-![](https://i.imgur.com/fIKt0BV.png)
+![](https://i.imgur.com/BdrgnC2.png)
+![](https://i.imgur.com/gKByqAQ.jpeg)
 ![Imgur](https://i.imgur.com/mLmM4ad.png)
+
+The Desktop widget is an added feature that shows the currently playing song, has basic media controls, and stays on top of any application you are using.
+**Disabled by default**.
 
 ## Installing
 
@@ -17,7 +21,7 @@ MacOS Apple Silicon (arm64): Playful-darwin-arm64-[version].zip (ARM no longer s
 
 ## Running from source
 
-The app provides two ways to access Spotify playback info. Either through your local Spotify player or through the official Spotify Web Api (using Spotify Connect). For the first option no additional steps are needed and you can go straight to "Steps to run from source". <b>To set up the Web API you need to do the following</b>
+The app provides access Spotify playback info through the native MacOS APIs. However, the Desktop Widget can obtain the album cover of a song either through your local Spotify player or through the official Spotify Web Api (using Spotify Connect). For the first option no additional steps are needed and you can go straight to "Steps to run from source". <b>To set up the Web API you need to do the following:</b>
 
 You need to provide your own app credentials. All the details can be found in Spotify's [official docs](https://developer.spotify.com/documentation/web-api/) but here are all the steps to get you started.
 
@@ -31,10 +35,16 @@ You need to provide your own app credentials. All the details can be found in Sp
 
 4. Add http://localhost:8080/ as a Redirect URI
 
-5. Copy and paste the client_id and client_secret (found on the top left of the dashboard) into `sensitive.json`
+5. Copy and paste the client_id (found on the top left of the dashboard) into `sensitive.json`
 
 Done!  
 Now time to run the app
+
+### Pre-Requirements:
+
+You need to have installed on your system:
+1. The `swift compiler` (through xcode's dev tools)
+2. `CMake` (and be accessible from the terminal)
 
 ### Steps to run from source:
 
@@ -42,6 +52,7 @@ Now time to run the app
 2. `cd Playful`
 3. `npm i`
 4. `npm start`
+
 
 ### Buidling a distributable
 
@@ -56,4 +67,4 @@ Installing from the prepackaged releases, however, works fully out-of-the-box.
 
 - The App icons are not mine. They are provided by Icons8 and can be found [here](https://icons8.com/icon/116726/spotify)
 
-- Support for Linux/Windows: This app is actually ready to build for Linux and Windows environments. However, neither provide an easy way to access the system's menu bar/tray and set text (to show the current song). They only allow the showing of icons. Should I find any way to go around this I'll update the project.
+- Support for Linux/Windows: Every platform has its own internal media playback system. Since Electron does not offer this integration, I would have to redo all the work for new platforms. It was a already a big challenge to get the MacOS playback information. Maybe in the future I might consider expanding to other OSes.
