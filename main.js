@@ -425,7 +425,7 @@ function qrWindow() {
     },
   });
   qrWindow.loadFile("./qrcode/index.html");
-  qrWindow.webContents.openDevTools();
+  // qrWindow.webContents.openDevTools();
   qrWindow.on("closed", () => {
     app.dock.hide();
   });
