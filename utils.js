@@ -40,10 +40,17 @@ function format_track(song, artist) {
     }
 }
 
-let prevController = new AbortController();
+let prevController = [
+    new AbortController(),
+    new AbortController(),
+    new AbortController(),
+    new AbortController(),
+    new AbortController()
+];
 // let albumRetrieve;
 // Returns the Album URL from the trackID
-function format_trackID(trackID, spot_instance) {
+// Subscribe to up to five channels (0-4). Each channel maintains order consistency
+function format_trackID(trackID, spot_instance, channel = 0) {
     if (store.get("source", "spotify") == "spotify") {
         // Apple Script provides better quality
         // if (albumRetrieve){
@@ -63,13 +70,13 @@ function format_trackID(trackID, spot_instance) {
         return getAlbumCoverArt();
     } else if (store.get("source", "spotify") == "connect") {
         try {
-            prevController.abort();
-            prevController = new AbortController();
+            prevController[channel].abort();
+            prevController[channel] = new AbortController();
             if (trackID.split(':').length < 3) {
                 throw ("Incorrect TrackID");
             }
             return spot_instance
-                .get(`tracks/${trackID.split(':')[2]}`, { signal: prevController.signal })
+                .get(`tracks/${trackID.split(':')[2]}`, { signal: prevController[channel].signal })
                 .then((res) => {
                     if (res.status !== 200) {
                         throw ("Spotify threw error");
@@ -84,11 +91,11 @@ function format_trackID(trackID, spot_instance) {
                         return getAlbumCoverArt();
                     }
                 })
-        } catch(e) {
-            // console.log(e)
+        } catch (e) {
+            console.log("Format_trackID error:", e)
             return getAlbumCoverArt();
         }
-        
+
         // Future Reference:
         // https://stackoverflow.com/questions/10123804/retrieve-cover-artwork-using-spotify-api
     }

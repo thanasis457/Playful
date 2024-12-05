@@ -103,3 +103,4 @@ window.api.onMediaChange((song) => {
     }
   }
 })
+
