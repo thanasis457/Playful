@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  padding: 5%;
+  align-items: center;
+}
+
+#qrcode {
+  width: fit-content;
+}
+
+.text {
+  color: black;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: lightgray;
+}

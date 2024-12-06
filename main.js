@@ -418,8 +418,8 @@ async function handleWebSocketShutdown() {
 function qrWindow() {
   // QR Window
   const qrWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 340,
+    height: 390,
     webPreferences: {
       preload: path.join(__dirname, "qrPreload.js")
     },

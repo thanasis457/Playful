@@ -1,9 +1,8 @@
 window.api.getIp().then((ip) => {
     var qrcode = document.getElementById("qrcode")
-    if (ip) {
-        qrcode.innerText = ip;
+    if (!ip) {
+        qrcode.innerText = "Service is initialising. Try again in a bit";
     }
-    else qrcode.innerText = "Hello";
     new QRCode(qrcode, {
         text: ip,
         width: 256,
