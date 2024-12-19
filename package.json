@@ -1,6 +1,6 @@
 {
   "name": "Playful",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Shows the current playing song. Made to show spotify songs.",
   "main": "main.js",
   "scripts": {

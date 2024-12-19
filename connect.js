@@ -43,10 +43,14 @@ const webSocketSetup = (current_song, spot_instance) => {
     wss.on('connection', (ws) => {
         if (current_song.setUp)
             format_trackID(current_song.trackID, spot_instance, 1).then((data) => {
-                ws.send(JSON.stringify({ ...current_song, album: data }));
+                ws.send(JSON.stringify({ type: "message", ...current_song, album: data }));
             });
 
-        ws.on('error', console.error);
+        ws.on('error', (e) => { console.error("Error:", e) });
+        ws.on('close', (e) => {
+            console.error("Closed:", e);
+            clearInterval(keepAlive);
+        });
 
         ws.on('message', function message(data) {
             /*
@@ -61,6 +65,10 @@ const webSocketSetup = (current_song, spot_instance) => {
                 togglePlay({ store, spot_instance });
             console.log("Received: %s", data)
         });
+
+        const keepAlive = setInterval(() => {
+            ws.send(JSON.stringify({ type: "ping" }));
+        }, 240000);// 4 minutes
     });
 }
 
@@ -78,10 +86,10 @@ const getClients = () => {
 }
 
 const notify = (message) => {
-    if(wss===null) return;
+    if (wss === null) return;
     console.log(wss.clients.size)
     wss.clients.forEach((client) => {
-        client.send(JSON.stringify(message));
+        client.send(JSON.stringify({ type: "message", ...message }));
     })
 }
 
@@ -89,7 +97,7 @@ const fetchIp = () => {
     if (ngrok === null) return "try again in a little";
     console.log(urlNgrok);
     return urlNgrok;
-    
+
     // Fetch local wifi ip
     // const nets = networkInterfaces();
     // const results = Object.create(null); // Or just '{}', an empty object
