@@ -5,6 +5,8 @@ const { store } = require("./main.js");
 const sensitive = require("./sensitive.json");
 
 const hostname = sensitive.hostname;
+const authtoken = sensitive.ngrok_authtoken;
+
 const {
     togglePlay,
     playNext,
@@ -17,6 +19,7 @@ const ngrokSetup = async function () {
     try {
         // Start ngrok and expose a local port (e.g., 5050)
         urlNgrok = await ngrok.connect({
+            authtoken: authtoken,
             proto: 'http',       // Protocol to use (http or tcp)
             addr: 5050,          // Port on which your WebSocket server is running
             region: 'us',        // Optional: Specify ngrok region (e.g., 'us', 'eu', 'ap')
