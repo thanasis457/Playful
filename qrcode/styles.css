@@ -11,6 +11,19 @@ body {
   align-items: center;
 }
 
+.main.websocket {
+  padding: 5%;
+  height: 100%;
+  gap: 10px;
+}
+
+.domain_form {
+  width: 80%;
+}
+.domain_form > input {
+  width: 100%;
+}
+
 #qrcode {
   width: fit-content;
 }

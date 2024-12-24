@@ -12,3 +12,15 @@ window.api.getIp().then((ip) => {
         correctLevel: QRCode.CorrectLevel.H
     });
 });
+
+const submit = document.getElementById("submit");
+const domain_elem = document.getElementById("domain");
+const authtoken_elem = document.getElementById("authtoken");
+window.api.getTunnelInfo().then(({domain, authtoken}) => {
+    console.log("Got:", domain, authtoken);
+    domain_elem.value = domain;
+    authtoken_elem.value = authtoken;
+})
+submit.addEventListener('click', () => {
+    window.api.setTunnelInfo(domain_elem.value, authtoken_elem.value)
+})

@@ -5,9 +5,8 @@ const {
   Tray,
   Menu,
   nativeImage,
-  NativeImage,
+  shell,
   Notification,
-  dialog,
   ipcMain,
 } = require("electron");
 const sensitive = require("./sensitive.json");
@@ -38,6 +37,8 @@ const {
 //   'length': 'short' | 'long',
 //   'source': 'spotify' | 'connect' | 'none'
 //   'send_notification' = false | true
+//   'connect' = false | true
+//   'connect_tunnel' = { domain: "ngrok url", authtoken: "ngrok token" }
 // }
 
 /* Store MUST be declared and initialised beforehand so that the functions below have access to the right reference */
@@ -404,7 +405,9 @@ app.whenReady().then(() => {
 });
 
 async function handleWebSocketSetUp() {
-  await ngrokSetup();
+  const tunnel = store.get('connect_tunnel', { domain: '', authtoken: '' })
+  if (tunnel.domain !== '')
+    await ngrokSetup(tunnel.domain, tunnel.authtoken);
   webSocketSetup(current_song, spot_instance);
   console.log("Setup successful")
 }
@@ -419,7 +422,7 @@ function qrWindow() {
   // QR Window
   const qrWindow = new BrowserWindow({
     width: 340,
-    height: 390,
+    height: 410,
     webPreferences: {
       preload: path.join(__dirname, "qrPreload.js")
     },
@@ -429,6 +432,12 @@ function qrWindow() {
   qrWindow.on("closed", () => {
     app.dock.hide();
   });
+  
+  // Open url's on browser (careful with Electron's versions. Some solutions are deprecated)
+  qrWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: 'deny' }
+  })
 }
 
 function startServer() {
@@ -700,4 +709,18 @@ ipcMain.handle('get-cover', async (event, trackID, args) => {
 
 ipcMain.handle('get-ip', async (args) => {
   return fetchIp();
+})
+
+ipcMain.on('set-tunnel-info', (event, domain, authtoken) => {
+  console.log("Fetched: ", domain, authtoken)
+  if(domain === '' || authtoken === '') {
+    store.set('connect_tunnel', {domain: '', authtoken: ''});
+  }
+  else {
+    store.set('connect_tunnel', { domain, authtoken });
+  }
+})
+
+ipcMain.handle('get-tunnel-info', async (args) => {
+  return store.get('connect_tunnel', { domain: '', authtoken: '' });
 })

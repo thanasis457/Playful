@@ -2,10 +2,7 @@ const ngrok = require('ngrok');
 const { format_trackID } = require("./utils.js")
 const { WebSocketServer } = require("ws");
 const { store } = require("./main.js");
-const sensitive = require("./sensitive.json");
-
-const hostname = sensitive.hostname;
-const authtoken = sensitive.ngrok_authtoken;
+const { networkInterfaces } = require("os")
 
 const {
     togglePlay,
@@ -15,7 +12,7 @@ const {
 
 var urlNgrok = null;
 var wss = null;
-const ngrokSetup = async function () {
+const ngrokSetup = async function (domain, authtoken) {
     try {
         // Start ngrok and expose a local port (e.g., 5050)
         urlNgrok = await ngrok.connect({
@@ -23,11 +20,12 @@ const ngrokSetup = async function () {
             proto: 'http',       // Protocol to use (http or tcp)
             addr: 5050,          // Port on which your WebSocket server is running
             region: 'us',        // Optional: Specify ngrok region (e.g., 'us', 'eu', 'ap')
-            hostname: hostname,
+            hostname: domain,
         });
         console.log("NGROK:", urlNgrok);
         return urlNgrok;
     } catch (err) {
+        urlNgrok = null;
         console.error('Error starting ngrok:', err);
     }
 };
@@ -97,29 +95,29 @@ const notify = (message) => {
 }
 
 const fetchIp = () => {
-    if (ngrok === null) return "try again in a little";
     console.log(urlNgrok);
-    return urlNgrok;
+    if (urlNgrok !== null)
+        return urlNgrok;
 
     // Fetch local wifi ip
-    // const nets = networkInterfaces();
-    // const results = Object.create(null); // Or just '{}', an empty object
+    const nets = networkInterfaces();
+    const results = Object.create(null); // Or just '{}', an empty object
 
-    // for (const name of Object.keys(nets)) {
-    //     for (const net of nets[name]) {
-    //         // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-    //         // 'IPv4' is in Node <= 17, from 18 it's a number 4 or 6
-    //         const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4
-    //         if (net.family === familyV4Value && !net.internal) {
-    //             if (!results[name]) {
-    //                 results[name] = [];
-    //             }
-    //             results[name].push(net.address);
-    //         }
-    //     }
-    // }
-    // console.log(results['en0']);
-    // return "ws://" + results['en0'] + ":443";
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+            // 'IPv4' is in Node <= 17, from 18 it's a number 4 or 6
+            const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4
+            if (net.family === familyV4Value && !net.internal) {
+                if (!results[name]) {
+                    results[name] = [];
+                }
+                results[name].push(net.address);
+            }
+        }
+    }
+    console.log(results['en0']);
+    return "ws://" + results['en0'] + ":5050";
 }
 
 module.exports.ngrokSetup = ngrokSetup;

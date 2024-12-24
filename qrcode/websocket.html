@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+    <title>Playful Connect</title>
+</head>
+
+<body>
+    <div class="main websocket">
+        <p class="text">Often, wifi restrictions may not allow you to connect.
+            You can set up a proxy server to tunnel all requests and allow your connection to work over the internet.
+            <br/>
+            Do the following:
+        <ol>
+            <li>Go to <a target="_blank" href="https://ngrok.com/">ngrok</a></li>
+            <li>Sign in/Create account</li>
+            <li>Make an Domain</li>
+            <li>Paste the Domain's URL and Authtoken below. Leave empty if you want to use the default local wifi connection</li>
+            <li>Press submit. Now disable and re-enable the app connectivity on the Menu Bar.</li>
+        </ol>
+        </p>
+        <form class="domain_form">
+            <label for="domain">Domain URL:</label><br>
+            <input type="text" id="domain" name="domain"><br>
+            <label for="authtoken">Authtoken:</label><br>
+            <input type="text" id="authtoken" name="authtoken">
+        </form>
+        <button id="submit">Submit</button>
+    </div>
+    <script src="../qrRenderer.js" charset="utf-8"></script>
+</body>
+
+</html>
