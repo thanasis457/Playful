@@ -19,9 +19,9 @@ The easiest way to get running is to head to [Releases](https://github.com/thana
 MacOS Intel (x64): Playful-darwin-x64-[version].zip  
 MacOS Apple Silicon (arm64): Playful-darwin-arm64-[version].zip (ARM no longer supported since I do no longer own an ARM equipped Mac. You can build your own distributable, though, using the instructions provided)
 
-## Running from source
+## Building from source
 
-The app provides access Spotify playback info through the native MacOS APIs. However, the Desktop Widget can obtain the album cover of a song either through your local Spotify player or through the official Spotify Web Api (using Spotify Connect). For the first option no additional steps are needed and you can go straight to "Steps to run from source". <b>To set up the Web API you need to do the following:</b>
+The app provides access Spotify playback info through the native MacOS APIs. However, a song's album cover is obtained either through your local Spotify player or through the official Spotify Web Api (using Spotify Connect). For the first option no additional steps are needed and you can go straight to "Steps to run from source". <b>To set up the Web API you need to do the following:</b>
 
 You need to provide your own app credentials. All the details can be found in Spotify's [official docs](https://developer.spotify.com/documentation/web-api/) but here are all the steps to get you started.
 
@@ -68,3 +68,9 @@ Installing from the prepackaged releases, however, works fully out-of-the-box.
 - The App icons are not mine. They are provided by Icons8 and can be found [here](https://icons8.com/icon/116726/spotify)
 
 - Support for Linux/Windows: Every platform has its own internal media playback system. Since Electron does not offer this integration, I would have to redo all the work for new platforms. It was a already a big challenge to get the MacOS playback information. Maybe in the future I might consider expanding to other OSes.
+
+## [Playful-Connect](https://github.com/thanasis457/Playful-Connect)
+
+Playful now has an Android companion app. See your currently playing Spotify song on a lightweight and minimal app, designed to make your phone into an elegant mini-canvas.
+
+Download Playful-Connect [here](https://github.com/thanasis457/Playful-Connect)
