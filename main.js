@@ -329,16 +329,22 @@ app.whenReady().then(() => {
           submenu: [
             {
               label: "Enable",
+              id: "connect",
               type: "checkbox",
               click() {
                 if (store.get("connect", false) === false) {
-                  handleWebSocketSetUp();
-                  store.set("connect", true);
-                  contextMenu.getMenuItemById('qr').enabled = true;
+                  handleWebSocketSetUp().then(()=>{
+                    store.set("connect", true);
+                    contextMenu.getMenuItemById('qr').enabled = true;
+                  }).catch((e) => {
+                    contextMenu.getMenuItemById('connect').checked = false;
+                    handleWebSocketShutdown();
+                  });
                 } else {
-                  handleWebSocketShutdown();
-                  store.set("connect", false);
-                  contextMenu.getMenuItemById('qr').enabled = false;
+                  handleWebSocketShutdown().then(()=>{
+                    store.set("connect", false);
+                    contextMenu.getMenuItemById('qr').enabled = false;
+                  });
                 }
               },
               checked: store.get("connect", false) === true,
@@ -419,6 +425,7 @@ app.whenReady().then(() => {
   if (store.get('connect', false) === true) handleWebSocketSetUp();
 });
 
+// Throws error on failure
 async function handleWebSocketSetUp() {
   const tunnel = store.get('connect_tunnel', { domain: '', authtoken: '' })
   if (tunnel.domain !== '')
@@ -427,6 +434,7 @@ async function handleWebSocketSetUp() {
   console.log("Setup successful")
 }
 
+// Guaranteed to run without errors
 async function handleWebSocketShutdown() {
   await ngrokShutdown();
   webSocketShutdown();
