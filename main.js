@@ -639,7 +639,7 @@ function startUpFetch() {
       widgetWindow.webContents.send('update-player-state', current_song);
     }
     if (getClients().size > 0) {
-      format_trackID(trackID, spot_instance, 1).then((data) => {
+      format_trackID("", spot_instance, 1).then((data) => {
         notify({ ...current_song, album: data });
       })
     }
