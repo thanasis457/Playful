@@ -21,7 +21,7 @@ function getCurrentSongOnce({ store, spot_instance }) {
 }
 
 function getAlbumCoverArt() {
-  // Assume source is spotify
+  // Get source through Spotify App
   return new Promise((resolve, reject) => {
     runAppleScript("compiledFunctions/getAlbumCoverArt.scpt").then((res) => {
       resolve(res)

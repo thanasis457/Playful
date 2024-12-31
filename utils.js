@@ -54,7 +54,7 @@ let prevController = [
 function format_trackID(trackID, spot_instance, channel = 0) {
     if (!net.isOnline()) {
         return getAlbumCoverArt();
-    } else if (store.get("source", "spotify") == "connect") {
+    } else {
         try {
             prevController[channel].abort();
             prevController[channel] = new AbortController();

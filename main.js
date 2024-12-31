@@ -31,18 +31,33 @@ const {
 
 // Do not change the order of the three. Necessary for cyclic dependency.
 // Store will be like:
-// {
-//   'refresh_token': ...,
-//   'widget': 'hide' | 'show',
-//   'length': 'short' | 'long',
-//   'source': 'spotify' | 'connect' | 'none'
-//   'send_notification' = false | true
-//   'connect' = false | true
-//   'connect_tunnel' = { domain: "ngrok url", authtoken: "ngrok token" }
-// }
+const schema = {
+    refresh_token: {
+      type: "string"
+    },
+    widget: {
+      enum: ['hide', 'show']
+    },
+    length: {
+      enum: ['short', 'long']
+    },
+    // source: {
+    //   enum: ['spotify', 'connect', 'none']
+    // },
+    connect: {
+      type: "boolean"
+    },
+    connect_tunnel: {
+      type: "object",
+      properties: {
+        domain: { type: "string" },
+        authtoken: { type: "string" }
+      }
+    },
+};
 
 /* Store MUST be declared and initialised beforehand so that the functions below have access to the right reference */
-const store = new Store();
+const store = new Store(schema);
 module.exports.store = store;
 const { format_track, format_trackID } = require("./utils.js")
 const { ngrokSetup, ngrokShutdown, webSocketSetup, webSocketShutdown, getClients, notify, fetchIp } = require("./connect.js");
@@ -276,38 +291,38 @@ app.whenReady().then(() => {
             },
           ],
         },
-        {
-          label: "Album Cover Source",
-          type: "submenu",
-          submenu: [
-            {
-              label: "Spotify App",
-              type: "radio",
-              click() {
-                store.set("source", "spotify");
-              },
-              checked: store.get("source", "spotify") === "spotify",
-            },
-            {
-              label: "Spotify Connect (Experimental)",
-              type: "radio",
-              click() {
-                store.set("source", "connect");
-                handleSignIn()
-                  .then(() => {
-                    console.log("Signed In");
-                  })
-                  .catch(() => {
-                    console.log("Signed Out");
-                    new Notification({
-                      title: "Sign In Error",
-                    }).show();
-                  });
-              },
-              checked: store.get("source", "spotify") === "connect",
-            },
-          ],
-        },
+        // {
+        //   label: "Album Cover Source",
+        //   type: "submenu",
+        //   submenu: [
+        //     {
+        //       label: "Spotify App",
+        //       type: "radio",
+        //       click() {
+        //         store.set("source", "spotify");
+        //       },
+        //       checked: store.get("source", "spotify") === "spotify",
+        //     },
+        //     {
+        //       label: "Spotify Connect (Experimental)",
+        //       type: "radio",
+        //       click() {
+        //         store.set("source", "connect");
+        //         handleSignIn()
+        //           .then(() => {
+        //             console.log("Signed In");
+        //           })
+        //           .catch(() => {
+        //             console.log("Signed Out");
+        //             new Notification({
+        //               title: "Sign In Error",
+        //             }).show();
+        //           });
+        //       },
+        //       checked: store.get("source", "spotify") === "connect",
+        //     },
+        //   ],
+        // },
         {
           label: "Spotify Connect - App",
           type: "submenu",
@@ -316,23 +331,23 @@ app.whenReady().then(() => {
               label: "Enable",
               type: "checkbox",
               click() {
-                if (store.get("connect", "false") === "false") {
-                  store.set("connect", "true");
+                if (store.get("connect", false) === false) {
                   handleWebSocketSetUp();
+                  store.set("connect", true);
                   contextMenu.getMenuItemById('qr').enabled = true;
                 } else {
-                  store.set("connect", "false");
-                  contextMenu.getMenuItemById('qr').enabled = false;
                   handleWebSocketShutdown();
+                  store.set("connect", false);
+                  contextMenu.getMenuItemById('qr').enabled = false;
                 }
               },
-              checked: store.get("connect", "false") === "true",
+              checked: store.get("connect", false) === true,
             },
             {
               label: "Show QR",
               id: "qr",
               type: "normal",
-              enabled: store.get("connect", "false") === "true",
+              enabled: store.get("connect", false) === true,
               click() {
                 qrWindow();
               },
@@ -386,22 +401,22 @@ app.whenReady().then(() => {
   tray.setTitle("Now Playing");
   tray.setToolTip("This is my application.");
   tray.setContextMenu(contextMenu);
-  if (store.get("source") === "connect") {
-    handleSignIn()
-      .then(() => {
-        console.log("Signed in");
-      })
-      .catch(() => {
-        console.log("Signed out");
-        new Notification({
-          title: "Sign In Error",
-        }).show();
-      });
-  }
+  // if (store.get("source") === "connect") {
+  //   handleSignIn()
+  //     .then(() => {
+  //       console.log("Signed in");
+  //     })
+  //     .catch(() => {
+  //       console.log("Signed out");
+  //       new Notification({
+  //         title: "Sign In Error",
+  //       }).show();
+  //     });
+  // }
 
   if (store.get('widget', 'hide') === 'show') widget();
 
-  if (store.get('connect', 'false') === 'true') handleWebSocketSetUp();
+  if (store.get('connect', false) === true) handleWebSocketSetUp();
 });
 
 async function handleWebSocketSetUp() {
