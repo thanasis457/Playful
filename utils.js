@@ -1,6 +1,7 @@
 const { store } = require("./main.js");
 const axios = require("axios");
 const { getAlbumCoverArt } = require("./mediaScripts.js");
+const { net } = require('electron');
 
 function format_track(song, artist) {
     if (store.get("length", "short") == "long") {
@@ -47,26 +48,11 @@ let prevController = [
     new AbortController(),
     new AbortController()
 ];
-// let albumRetrieve;
+
 // Returns the Album URL from the trackID
 // Subscribe to up to five channels (0-4). Each channel maintains order consistency
 function format_trackID(trackID, spot_instance, channel = 0) {
-    if (store.get("source", "spotify") == "spotify") {
-        // Apple Script provides better quality
-        // if (albumRetrieve){
-        //     clearTimeout(albumRetrieve[0]);
-        //     try{
-        //         albumRetrieve[1]()
-        //     } catch(e){
-        //         console.log("err: ", e)
-        //     }
-        // };
-        // return new Promise((resolve, reject) => {
-        //     albumRetrieve = [setTimeout(() => {
-        //         getAlbumCoverArt().then((response) => resolve(response))
-        //     }, 500), reject];
-        // });
-        // setTimeout(getAlbumCoverArt, 500)
+    if (!net.isOnline()) {
         return getAlbumCoverArt();
     } else if (store.get("source", "spotify") == "connect") {
         try {
@@ -75,19 +61,23 @@ function format_trackID(trackID, spot_instance, channel = 0) {
             if (trackID.split(':').length < 3) {
                 throw ("Incorrect TrackID");
             }
-            return spot_instance
-                .get(`tracks/${trackID.split(':')[2]}`, { signal: prevController[channel].signal })
+            return axios
+                .get(`https://embed.spotify.com/oembed?url=${trackID}`, { signal: prevController[channel].signal })
                 .then((res) => {
                     if (res.status !== 200) {
-                        throw ("Spotify threw error");
+                        throw ("URL threw error");
                     }
-                    // console.log("Fetched with Spotify API: ", res.data.album.images[0].url)
-                    return res.data.album.images[0].url;
+                    // Upscale resolution by changing the cdn's url
+                    const regex = /(.{54})1e02(.+)/gm;
+                    const f = res.data.thumbnail_url.replace(regex, '$1b273$2');
+                    // console.log("Fetched with Smart Lookup: ", f, trackID);
+                    return f;
                 })
                 .catch((e) => {
                     if (axios.isCancel(e)) {
                         console.debug('Request canceled', e.message);
                     } else {
+                        console.debug(e);
                         return getAlbumCoverArt();
                     }
                 })
@@ -96,7 +86,7 @@ function format_trackID(trackID, spot_instance, channel = 0) {
             return getAlbumCoverArt();
         }
 
-        // Future Reference:
+        // Reference:
         // https://stackoverflow.com/questions/10123804/retrieve-cover-artwork-using-spotify-api
     }
 }
