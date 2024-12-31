@@ -5,9 +5,8 @@ const {
   Tray,
   Menu,
   nativeImage,
-  NativeImage,
+  shell,
   Notification,
-  dialog,
   ipcMain,
 } = require("electron");
 const sensitive = require("./sensitive.json");
@@ -27,22 +26,41 @@ const {
   playPrevious,
   openSpotify,
   getCurrentSongOnce,
-  getState,
-  getAlbumCoverArt,
+  getState
 } = require("./mediaScripts.js");
 
 // Do not change the order of the three. Necessary for cyclic dependency.
 // Store will be like:
-// {
-//   'refresh_token': ...,
-//   'widget': 'hide' | 'show',
-//   'length': 'short' | 'long',
-//   'source': 'spotify' | 'connect' | 'none'
-//   'send_notification' = false | true
-// }
-const store = new Store();
+const schema = {
+    refresh_token: {
+      type: "string"
+    },
+    widget: {
+      enum: ['hide', 'show']
+    },
+    length: {
+      enum: ['short', 'long']
+    },
+    // source: {
+    //   enum: ['spotify', 'connect', 'none']
+    // },
+    connect: {
+      type: "boolean"
+    },
+    connect_tunnel: {
+      type: "object",
+      properties: {
+        domain: { type: "string" },
+        authtoken: { type: "string" }
+      }
+    },
+};
+
+/* Store MUST be declared and initialised beforehand so that the functions below have access to the right reference */
+const store = new Store(schema);
 module.exports.store = store;
 const { format_track, format_trackID } = require("./utils.js")
+const { ngrokSetup, ngrokShutdown, webSocketSetup, webSocketShutdown, getClients, notify, fetchIp } = require("./connect.js");
 
 const scope = [
   "user-read-currently-playing",
@@ -81,7 +99,6 @@ function widget() {
   widgetWindow.on("closed", () => {
     app.dock.hide();
     widgetWindow = null;
-
   })
   // main.openDevTools();
 }
@@ -274,35 +291,72 @@ app.whenReady().then(() => {
             },
           ],
         },
+        // {
+        //   label: "Album Cover Source",
+        //   type: "submenu",
+        //   submenu: [
+        //     {
+        //       label: "Spotify App",
+        //       type: "radio",
+        //       click() {
+        //         store.set("source", "spotify");
+        //       },
+        //       checked: store.get("source", "spotify") === "spotify",
+        //     },
+        //     {
+        //       label: "Spotify Connect (Experimental)",
+        //       type: "radio",
+        //       click() {
+        //         store.set("source", "connect");
+        //         handleSignIn()
+        //           .then(() => {
+        //             console.log("Signed In");
+        //           })
+        //           .catch(() => {
+        //             console.log("Signed Out");
+        //             new Notification({
+        //               title: "Sign In Error",
+        //             }).show();
+        //           });
+        //       },
+        //       checked: store.get("source", "spotify") === "connect",
+        //     },
+        //   ],
+        // },
         {
-          label: "Album Cover Source",
+          label: "Spotify Connect - App",
           type: "submenu",
           submenu: [
             {
-              label: "Spotify App",
-              type: "radio",
+              label: "Enable",
+              id: "connect",
+              type: "checkbox",
               click() {
-                store.set("source", "spotify");
+                if (store.get("connect", false) === false) {
+                  handleWebSocketSetUp().then(()=>{
+                    store.set("connect", true);
+                    contextMenu.getMenuItemById('qr').enabled = true;
+                  }).catch((e) => {
+                    contextMenu.getMenuItemById('connect').checked = false;
+                    handleWebSocketShutdown();
+                  });
+                } else {
+                  handleWebSocketShutdown().then(()=>{
+                    store.set("connect", false);
+                    contextMenu.getMenuItemById('qr').enabled = false;
+                  });
+                }
               },
-              checked: store.get("source", "spotify") === "spotify",
+              checked: store.get("connect", false) === true,
             },
             {
-              label: "Spotify Connect (Experimental)",
-              type: "radio",
+              label: "Show QR",
+              id: "qr",
+              type: "normal",
+              enabled: store.get("connect", false) === true,
               click() {
-                store.set("source", "connect");
-                handleSignIn()
-                  .then(() => {
-                    console.log("Signed In");
-                  })
-                  .catch(() => {
-                    console.log("Signed Out");
-                    new Notification({
-                      title: "Sign In Error",
-                    }).show();
-                  });
+                qrWindow();
               },
-              checked: store.get("source", "spotify") === "connect",
             },
           ],
         },
@@ -339,24 +393,75 @@ app.whenReady().then(() => {
       },
     },
   ]);
+
+  /* Start subscriber process */
+  getCurrentSong();
+
+  /*
+  Handle SetUp according to saved preferences:
+  -- Handle Spotify Sign In for album cover
+  -- Handle widget window creation
+  -- Handle WebSocket server creation
+  */
+
   tray.setTitle("Now Playing");
   tray.setToolTip("This is my application.");
   tray.setContextMenu(contextMenu);
-  if (store.get("source") === "connect") {
-    handleSignIn()
-      .then(() => {
-        console.log("Signed in");
-      })
-      .catch(() => {
-        console.log("Signed out");
-        new Notification({
-          title: "Sign In Error",
-        }).show();
-      });
-  }
-  getCurrentSong();
+  // if (store.get("source") === "connect") {
+  //   handleSignIn()
+  //     .then(() => {
+  //       console.log("Signed in");
+  //     })
+  //     .catch(() => {
+  //       console.log("Signed out");
+  //       new Notification({
+  //         title: "Sign In Error",
+  //       }).show();
+  //     });
+  // }
+
   if (store.get('widget', 'hide') === 'show') widget();
+
+  if (store.get('connect', false) === true) handleWebSocketSetUp();
 });
+
+// Throws error on failure
+async function handleWebSocketSetUp() {
+  const tunnel = store.get('connect_tunnel', { domain: '', authtoken: '' })
+  if (tunnel.domain !== '')
+    await ngrokSetup(tunnel.domain, tunnel.authtoken);
+  webSocketSetup(current_song, spot_instance);
+  console.log("Setup successful")
+}
+
+// Guaranteed to run without errors
+async function handleWebSocketShutdown() {
+  await ngrokShutdown();
+  webSocketShutdown();
+  console.log("Shutdown successful")
+}
+
+function qrWindow() {
+  // QR Window
+  const qrWindow = new BrowserWindow({
+    width: 340,
+    height: 410,
+    webPreferences: {
+      preload: path.join(__dirname, "qrPreload.js")
+    },
+  });
+  qrWindow.loadFile("./qrcode/index.html");
+  // qrWindow.webContents.openDevTools();
+  qrWindow.on("closed", () => {
+    app.dock.hide();
+  });
+  
+  // Open url's on browser (careful with Electron's versions. Some solutions are deprecated)
+  qrWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: 'deny' }
+  })
+}
 
 function startServer() {
   return new Promise((resolve) => {
@@ -481,13 +586,14 @@ function getRefreshToken() {
       .post("api/token", params.toString())
       .then((res) => {
         access_token = res.data.access_token;
+        refresh_token = res.data.refresh_token;
         timer = res.data.expires_in;
         console.log("Set timeout at, ", timer);
         store.set("refresh_token", res.data.refresh_token);
         setTimeout(() => {
           getRefreshToken();
         }, timer * 1000);
-        console.log("resolving");
+        console.log("resolving token refresh");
         spot_instance = axios.create({
           baseURL: "https://api.spotify.com/v1/",
           headers: {
@@ -497,7 +603,7 @@ function getRefreshToken() {
         resolve();
       })
       .catch((err) => {
-        console.log(err);
+        console.log("Error on refreshing the token:", err);
         reject(err);
       });
   });
@@ -536,10 +642,10 @@ let current_song = {
 }; //song, artist, album-cover
 
 // First time set-up (no event has been triggered)
-function startUpFetch(){
+function startUpFetch() {
   //Check if song is already loaded
-  if (current_song.setUp){
-    if (widgetWindow){
+  if (current_song.setUp) {
+    if (widgetWindow) {
       widgetWindow.webContents.send('update-song', current_song);
       widgetWindow.webContents.send('update-player-state', current_song);
     }
@@ -555,7 +661,12 @@ function startUpFetch(){
       widgetWindow.webContents.send('update-song', current_song);
       widgetWindow.webContents.send('update-player-state', current_song);
     }
-  }) .catch((err) => {
+    if (getClients().size > 0) {
+      format_trackID("", spot_instance, 1).then((data) => {
+        notify({ ...current_song, album: data });
+      })
+    }
+  }).catch((err) => {
     console.debug(err)
   })
 }
@@ -566,14 +677,19 @@ async function getCurrentSong() {
       current_song.artist = artist;
       current_song.trackID = trackID;
       tray.setTitle(format_track(name, artist));
-      if (widgetWindow) widgetWindow.webContents.send('update-song', current_song)
+      if (widgetWindow) widgetWindow.webContents.send('update-song', current_song);
+      if (getClients().size > 0) {
+        format_trackID(trackID, spot_instance, 1).then((data) => {
+          notify({ ...current_song, album: data });
+        })
+      }
     }
     if (playing !== current_song.playing) {
       current_song.playing = playing;
       if (widgetWindow) widgetWindow.webContents.send('update-player-state', current_song)
     }
   }
-  
+
   startUpFetch();
   MediaSubscriber.subscribe(updateSong)
 }
@@ -612,4 +728,22 @@ ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
 
 ipcMain.handle('get-cover', async (event, trackID, args) => {
   return await format_trackID(trackID, spot_instance);
+})
+
+ipcMain.handle('get-ip', async (args) => {
+  return fetchIp();
+})
+
+ipcMain.on('set-tunnel-info', (event, domain, authtoken) => {
+  console.log("Fetched: ", domain, authtoken)
+  if(domain === '' || authtoken === '') {
+    store.set('connect_tunnel', {domain: '', authtoken: ''});
+  }
+  else {
+    store.set('connect_tunnel', { domain, authtoken });
+  }
+})
+
+ipcMain.handle('get-tunnel-info', async (args) => {
+  return store.get('connect_tunnel', { domain: '', authtoken: '' });
 })

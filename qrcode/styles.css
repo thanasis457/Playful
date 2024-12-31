@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  padding: 5%;
+  align-items: center;
+}
+
+.main.websocket {
+  padding: 5%;
+  height: 100%;
+  gap: 10px;
+}
+
+.domain_form {
+  width: 80%;
+}
+.domain_form > input {
+  width: 100%;
+}
+
+#qrcode {
+  width: fit-content;
+}
+
+.text {
+  color: black;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: lightgray;
+}

@@ -1,6 +1,6 @@
 {
   "name": "Playful",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Shows the current playing song. Made to show spotify songs.",
   "main": "main.js",
   "scripts": {
@@ -36,9 +36,12 @@
     "electron-store": "^8.1.0",
     "express": "^4.18.1",
     "nan": "^2.20.0",
+    "ngrok": "^5.0.0-beta.2",
     "node-addon-api": "*",
     "node-gyp": "^10.1.0",
-    "run-applescript": "^6.0.0"
+    "qrcode": "^1.5.4",
+    "run-applescript": "^6.0.0",
+    "ws": "^8.18.0"
   },
   "config": {
     "forge": {
