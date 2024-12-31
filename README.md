@@ -3,9 +3,13 @@
 A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
 ## Screenshots
-![](https://i.imgur.com/BdrgnC2.png)
-![](https://i.imgur.com/gKByqAQ.jpeg)
-![Imgur](https://i.imgur.com/mLmM4ad.png)
+<p align="center">
+  <img src="https://i.imgur.com/BdrgnC2.png" width="800"/>
+  <img src="https://i.imgur.com/gKByqAQ.jpeg" width="800"/>
+  <img src="https://i.imgur.com/mLmM4ad.png" width="900"/>
+</p>
+
+
 
 The Desktop widget is an added feature that shows the currently playing song, has basic media controls, and stays on top of any application you are using.
 **Disabled by default**.
@@ -53,3 +57,5 @@ Download Playful-Connect [here](https://github.com/thanasis457/Playful-Connect)
 [<img src="https://www.ko-fi.com/img/githubbutton_sm.svg" target="_blank"/>](https://ko-fi.com/thanasis457)
 
 I am a student that likes to work on projects like these on my free time. If you like what I do please consider supporting me! Any donation is appreciated!
+
+Should enough donations be reached, I will be able to publish Playful on the App Store and enable Auto-Updates. Donate if that sounds like something you would want!
