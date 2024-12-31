@@ -68,7 +68,7 @@ function format_trackID(trackID, spot_instance, channel = 0) {
                         throw ("URL threw error");
                     }
                     // Upscale resolution by changing the cdn's url
-                    const regex = /(.{54})1e02(.+)/gm;
+                    const regex = /(https:\/\/.+\.spotifycdn.com\/image\/.{12})1e02(.+)/gm;
                     const f = res.data.thumbnail_url.replace(regex, '$1b273$2');
                     // console.log("Fetched with Smart Lookup: ", f, trackID);
                     return f;
