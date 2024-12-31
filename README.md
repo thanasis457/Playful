@@ -47,3 +47,9 @@ This will create a folder named `out`. At the path `out/make/zip/darwin/` you wi
 Playful now has an Android companion app. See your currently playing Spotify song on a lightweight and minimal app, designed to make your phone into an elegant mini-canvas.
 
 Download Playful-Connect [here](https://github.com/thanasis457/Playful-Connect)
+
+## Support my work
+
+[<img src="https://www.ko-fi.com/img/githubbutton_sm.svg" target="_blank"/>](https://ko-fi.com/thanasis457)
+
+I am a student that likes to work on projects like these on my free time. If you like what I do please consider supporting me! Any donation is appreciated!
