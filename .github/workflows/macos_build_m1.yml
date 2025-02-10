@@ -4,10 +4,6 @@
 name: MacOS NodeJS-CMake
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
   workflow_dispatch:
 
 jobs:
@@ -48,4 +44,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Playful-darwin-amd64
-        path: /**/Playful/Playful/out/make
+        path: /Users/runner/work/Playful/Playful/out/make
