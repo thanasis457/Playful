@@ -48,4 +48,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Playful-darwin-amd64
-        path: .*/Playful/Playful/out/make
+        path: /**/Playful/Playful/out/make
