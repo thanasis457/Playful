@@ -1,13 +1,14 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Node.js CI
+name: MacOS NodeJS-CMake
 
 on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,21 +17,35 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [18.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - name: Setup cmake
-    - uses: jwlawson/actions-setup-cmake@v2
-    - with:
+      uses: jwlawson/actions-setup-cmake@v2
+      with:
         cmake-version: '3.16.x'
+    
     - name: Use cmake
-    - run: cmake --version
-    - uses: actions/checkout@v4
+      run: cmake --version
+
+    - name: Checkout Action
+      uses: actions/checkout@v4
+    
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm i
-    - run: npm run make
+    
+    - name: Install nodejs dependencies
+      run: npm i
+    
+    - name: Build
+      run: npm run make
+    
+    - name: Upload Build File
+      uses: actions/upload-artifact@v4
+      with:
+        name: Playful-darwin-amd64
+        path: /Users/runner/work/Playful/Playful/out/make
