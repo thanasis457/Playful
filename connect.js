@@ -1,4 +1,4 @@
-const ngrok = require('ngrok');
+const ngrok = require("@ngrok/ngrok");
 const { format_trackID } = require("./utils.js")
 const { WebSocketServer } = require("ws");
 const { store } = require("./main.js");
@@ -10,30 +10,29 @@ const {
     playPrevious
 } = require("./mediaScripts.js");
 
-var urlNgrok = null;
+var ngrok_listener = null;
 var wss = null;
 const ngrokSetup = async function (domain, authtoken) {
     try {
         // Start ngrok and expose a local port (e.g., 5050)
-        urlNgrok = await ngrok.connect({
+        ngrok_listener = await ngrok.forward({
             authtoken: authtoken,
             proto: 'http',       // Protocol to use (http or tcp)
             addr: 5050,          // Port on which your WebSocket server is running
-            region: 'us',        // Optional: Specify ngrok region (e.g., 'us', 'eu', 'ap')
             hostname: domain,
         });
-        console.log("NGROK:", urlNgrok);
-        return urlNgrok;
+        console.log("NGROK:", ngrok_listener.url());
+        return ngrok_listener.url();
     } catch (err) {
-        urlNgrok = null;
+        ngrok_listener = null;
         console.error('Error starting ngrok:', err);
     }
 };
 
 const ngrokShutdown = async function () {
     try {
-        await ngrok.disconnect(); // stops all
-        urlNgrok = null;
+        await ngrok_listener.close(); // stops all
+        ngrok_listener = null;
     } catch (err) {
         console.error('Could not shutdown ngrok:', err);
     }
@@ -95,9 +94,9 @@ const notify = (message) => {
 }
 
 const fetchIp = () => {
-    console.log(urlNgrok);
-    if (urlNgrok !== null)
-        return urlNgrok;
+    console.log(ngrok_listener.url());
+    if (ngrok_listener !== null)
+        return ngrok_listener.url();
 
     // Fetch local wifi ip
     const nets = networkInterfaces();
