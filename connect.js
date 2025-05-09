@@ -58,11 +58,11 @@ const webSocketSetup = (current_song, spot_instance) => {
             */
             const action = data.toString();
             if (action === 'next')
-                playNext({ store, spot_instance });
+                playNext();
             if (action === 'prev')
-                playPrevious({ store, spot_instance })
+                playPrevious()
             if (action === 'play')
-                togglePlay({ store, spot_instance });
+                togglePlay();
             console.log("Received: %s", data)
         });
 

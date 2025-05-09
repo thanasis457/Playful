@@ -209,21 +209,21 @@ app.whenReady().then(() => {
       label: "Play / Pause",
       type: "normal",
       click() {
-        togglePlay({ store, spot_instance });
+        togglePlay();
       },
     },
     {
       label: "Next",
       type: "normal",
       click() {
-        playNext({ store, spot_instance });
+        playNext();
       },
     },
     {
       label: "Previous",
       type: "normal",
       click() {
-        playPrevious({ store, spot_instance });
+        playPrevious();
       },
     },
     {
@@ -666,7 +666,7 @@ function startUpFetch() {
     }
     return;
   }
-  Promise.all([getCurrentSongOnce({ store, spot_instance }), getState({ store })]).then(([res, playing]) => {
+  Promise.all([getCurrentSongOnce(), getState()]).then(([res, playing]) => {
     current_song.name = res[0];
     current_song.artist = res[1];
     current_song.playing = playing;
@@ -715,13 +715,13 @@ ipcMain.handle('get-song', async (event, args) => {
 })
 
 ipcMain.on('play-previous', (event, args) => {
-  playPrevious({ store, spot_instance });
+  playPrevious();
 })
 
 // Return false on failure
 ipcMain.handle('toggle-play', async (event, args) => {
   try {
-    await togglePlay({ store, spot_instance });
+    await togglePlay();
     return true;
   } catch {
     return false;
@@ -729,11 +729,11 @@ ipcMain.handle('toggle-play', async (event, args) => {
 })
 
 ipcMain.on('play-next', (event, args) => {
-  playNext({ store, spot_instance })
+  playNext()
 })
 
 ipcMain.handle('get-state', async (event, args) => {
-  return await getState({ store });
+  return await getState();
 })
 
 ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
