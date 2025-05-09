@@ -69,6 +69,7 @@ const scope = [
 ];
 
 let widgetWindow = null;
+let qrWindow = null;
 function widget() {
   widgetWindow = new BrowserWindow({
     width: config.properties.width,
@@ -344,6 +345,7 @@ app.whenReady().then(() => {
                   handleWebSocketShutdown().then(()=>{
                     store.set("connect", false);
                     contextMenu.getMenuItemById('qr').enabled = false;
+                    if(qrWindow && !qrWindow.isDestroyed()) qrWindow.close();
                   });
                 }
               },
@@ -355,7 +357,10 @@ app.whenReady().then(() => {
               type: "normal",
               enabled: store.get("connect", false) === true,
               click() {
-                qrWindow();
+                if (qrWindow && !qrWindow.isDestroyed()) {
+                  qrWindow.close();
+                }
+                QR();
               },
             },
           ],
@@ -441,9 +446,9 @@ async function handleWebSocketShutdown() {
   console.log("Shutdown successful")
 }
 
-function qrWindow() {
+function QR() {
   // QR Window
-  const qrWindow = new BrowserWindow({
+  qrWindow = new BrowserWindow({
     width: 340,
     height: 410,
     webPreferences: {
@@ -454,6 +459,16 @@ function qrWindow() {
   // qrWindow.webContents.openDevTools();
   qrWindow.on("closed", () => {
     app.dock.hide();
+    
+    /* Do NOT set the window to null.
+      If the user closes the window then we can set it to null.
+      However, if the window is being reopened (eg. click on
+      "Show QR" while the window is still open) the window reference
+      might have changed to the new window by the time the
+      close event is emitted. This means we would null out the
+      reference to the new window and upon another reopening we
+      would not be able to close it.
+    */
   });
   
   // Open url's on browser (careful with Electron's versions. Some solutions are deprecated)
