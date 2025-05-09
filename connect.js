@@ -1,7 +1,6 @@
 const ngrok = require("@ngrok/ngrok");
 const { format_trackID } = require("./utils.js")
 const { WebSocketServer } = require("ws");
-const { store } = require("./main.js");
 const { networkInterfaces } = require("os")
 
 const {
@@ -38,11 +37,11 @@ const ngrokShutdown = async function () {
     }
 };
 
-const webSocketSetup = (current_song, spot_instance) => {
+const webSocketSetup = (current_song) => {
     wss = new WebSocketServer({ port: 5050 });
     wss.on('connection', (ws) => {
         if (current_song.setUp)
-            format_trackID(current_song.trackID, spot_instance, 1).then((data) => {
+            format_trackID(current_song.trackID, 1).then((data) => {
                 ws.send(JSON.stringify({ type: "message", ...current_song, album: data }));
             });
 
