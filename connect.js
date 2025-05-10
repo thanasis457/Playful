@@ -76,6 +76,9 @@ const webSocketSetup = (current_song) => {
 
 const webSocketShutdown = () => {
     try {
+        wss.clients.forEach((client) => {
+            client.terminate();
+        });
         wss.close();
         wss = null;
     } catch (err) {
