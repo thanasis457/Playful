@@ -23,6 +23,10 @@ const {
   getState
 } = require("./mediaScripts.js");
 
+// Logging Setup
+const { initialize, trackEvent } = require("@aptabase/electron/main");
+initialize("A-US-0996094887");
+
 // Do not change the order of the three. Necessary for cyclic dependency.
 // Store will be like:
 const schema = {
@@ -96,16 +100,14 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
+app.on('will-quit', (event) => {
+  app.quit()
+})
 let tray = null;
 
 app.whenReady().then(() => {
-  // console.log("Stored is ", store.get("refresh_token"));
-  // store.openInEditor()
-  // app.on("activate", () => {
-  //   // On macOS it's common to re-create a window in the app when the
-  //   // dock icon is clicked and there are no other windows open.
-  //   if (BrowserWindow.getAllWindows().length === 0) widget();
-  // });
+  registerHandlers();
+  trackEvent("app_started");
   app.dock.hide();
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
   let trayIcon = nativeImage
@@ -158,6 +160,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("widget", "hide");
                 if (widgetWindow) {
+                  trackEvent("widget", { shown: "False" });
                   widgetWindow.close();
                 }
               },
@@ -168,6 +171,7 @@ app.whenReady().then(() => {
               type: "radio",
               click() {
                 if (!widgetWindow) {
+                  trackEvent("widget", { shown: "True" });
                   widget();
                 }
                 store.set("widget", "show");
@@ -186,6 +190,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("length", "short");
                 tray.setTitle(format_track(current_song.name, current_song.artist));
+                trackEvent("text length", { length: "short" });
               },
               checked: store.get("length", "short") === "short",
             },
@@ -195,6 +200,7 @@ app.whenReady().then(() => {
               click() {
                 store.set("length", "long");
                 tray.setTitle(format_track(current_song.name, current_song.artist));
+                trackEvent("text length", { length: "long" });
               },
               checked: store.get("length", "short") === "long",
             },
@@ -428,55 +434,59 @@ async function getCurrentSong() {
 }
 
 // Main process
-ipcMain.handle('get-song', async (event, args) => {
-  return current_song;
-})
+function registerHandlers() {
+  ipcMain.handle('get-song', async (event, args) => {
+    return current_song;
+  })
 
-ipcMain.on('play-previous', (event, args) => {
-  playPrevious();
-})
+  ipcMain.on('play-previous', (event, args) => {
+    playPrevious();
+  })
 
-// Return false on failure
-ipcMain.handle('toggle-play', async (event, args) => {
-  try {
-    await togglePlay();
-    return true;
-  } catch {
-    return false;
-  }
-})
+  // Return false on failure
+  ipcMain.handle('toggle-play', async (event, args) => {
+    try {
+      await togglePlay();
+      return true;
+    } catch {
+      return false;
+    }
+  })
 
-ipcMain.on('play-next', (event, args) => {
-  playNext()
-})
+  ipcMain.on('play-next', (event, args) => {
+    playNext()
+  })
 
-ipcMain.handle('get-state', async (event, args) => {
-  return await getState();
-})
+  ipcMain.handle('get-state', async (event, args) => {
+    return await getState();
+  })
 
-ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
-  const win = BrowserWindow.fromWebContents(event.sender)
-  win.setIgnoreMouseEvents(ignore, options)
-})
+  ipcMain.on('set-ignore-mouse-events', (event, ignore, options) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    win.setIgnoreMouseEvents(ignore, options)
+  })
 
-ipcMain.handle('get-cover', async (event, trackID, args) => {
-  return await format_trackID(trackID);
-})
+  ipcMain.handle('get-cover', async (event, trackID, args) => {
+    return await format_trackID(trackID);
+  })
 
-ipcMain.handle('get-ip', async (args) => {
-  return fetchIp();
-})
+  ipcMain.handle('get-ip', async (args) => {
+    return fetchIp();
+  })
 
-ipcMain.on('set-tunnel-info', (event, domain, authtoken) => {
-  console.log("Fetched: ", domain, authtoken)
-  if(domain === '' || authtoken === '') {
-    store.set('connect_tunnel', {domain: '', authtoken: ''});
-  }
-  else {
-    store.set('connect_tunnel', { domain, authtoken });
-  }
-})
+  ipcMain.on('set-tunnel-info', (event, domain, authtoken) => {
+    console.log("Fetched: ", domain, authtoken)
+    if (domain === '' || authtoken === '') {
+      store.set('connect_tunnel', { domain: '', authtoken: '' });
+    }
+    else {
+      store.set('connect_tunnel', { domain, authtoken });
+    }
+  })
 
-ipcMain.handle('get-tunnel-info', async (args) => {
-  return store.get('connect_tunnel', { domain: '', authtoken: '' });
-})
+  ipcMain.handle('get-tunnel-info', async (args) => {
+    return store.get('connect_tunnel', { domain: '', authtoken: '' });
+  })
+};
+
+module.exports.registerHandlers = registerHandlers;
