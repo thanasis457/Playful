@@ -1,6 +1,6 @@
 {
   "name": "Playful",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "Shows the current playing song. Made to show spotify songs.",
   "main": "main.js",
   "scripts": {
@@ -40,13 +40,10 @@
     "axios": "^1.7.2",
     "bindings": "^1.5.0",
     "cmake-js": "^7.3.0",
-    "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
-    "express": "^4.18.1",
     "nan": "^2.20.0",
     "node-addon-api": "*",
     "node-gyp": "^10.1.0",
-    "qrcode": "^1.5.4",
     "run-applescript": "^6.0.0",
     "ws": "^8.18.0"
   },
@@ -67,32 +64,12 @@
       },
       "makers": [
         {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "Playful"
-          }
-        },
-        {
           "name": "@electron-forge/maker-zip",
           "platforms": [
             "darwin",
             "linux",
             "windows"
           ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "platforms": [
-            "linux"
-          ],
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "platforms": [
-            "linux"
-          ],
-          "config": {}
         }
       ]
     }

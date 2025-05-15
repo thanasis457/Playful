@@ -49,9 +49,10 @@ describe('Electron Testing', () => {
             if (currentTitle === "Spotify listener") break;
         }
         const song = await $('#song-title');
-        await song.waitForExist({ timeout: 5000 });
+        await song.waitForExist({ timeout: 2000 });
         const songtitle = await song.getText();
         console.log("Old:", songtitle);
+        await song.moveTo({x: 1, y: 1});
         const skip = await $('#skip-forward');
         skip.click();
         await browser.waitUntil(async () => {
@@ -60,6 +61,7 @@ describe('Electron Testing', () => {
             console.log("Not Equals:", s !== songtitle);
             console.log("Equals:", s === songtitle);
             console.log("Evaluate:", (s) !== null && s !== songtitle);
+            // await skip.moveTo({x: 1, y: 1});
             return (s) !== null && s !== songtitle;
         }, {
             timeout: 5000,
@@ -87,6 +89,7 @@ describe('Electron Testing', () => {
             timeout: 5000,
             timeoutMsg: 'expected track to play after 5s'
         })
+        pp.moveTo({x: 1, y: 1});
         pp.click();
         await browser.waitUntil(async () => {
             return (await runAppleScript("compiledFunctions/state.scpt")) === "paused"

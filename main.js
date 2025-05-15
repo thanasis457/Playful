@@ -8,6 +8,7 @@ const {
   shell,
   Notification,
   ipcMain,
+  dialog
 } = require("electron");
 const Store = process.env.NODE_ENV == "test" ?
   require('./test/electron-store.mock.js') :
@@ -17,46 +18,53 @@ const path = require("path");
 const config = require(path.join(__dirname, "./config.json"))
 const MediaSubscriber = require("bindings")("MediaSubscriber.node")
 const {
+  isRunning,
   togglePlay,
   playNext,
   playPrevious,
   openSpotify,
   getCurrentSongOnce,
-  getState
+  getState,
+  enableLaunch,
+  disableLaunch
 } = require("./mediaScripts.js");
 
 // Logging Setup
 const { initialize, trackEvent } = require("@aptabase/electron/main");
 initialize("A-US-0996094887");
-// Do not change the order of the three. Necessary for cyclic dependency.
+
 // Store will be like:
 const schema = {
-    refresh_token: {
-      type: "string"
-    },
-    widget: {
-      enum: ['hide', 'show']
-    },
-    length: {
-      enum: ['short', 'long']
-    },
-    // source: {
-    //   enum: ['spotify', 'connect', 'none']
-    // },
-    connect: {
-      type: "boolean"
-    },
-    connect_tunnel: {
-      type: "object",
-      properties: {
-        domain: { type: "string" },
-        authtoken: { type: "string" }
-      }
-    },
+  refresh_token: {
+    type: "string"
+  },
+  widget: {
+    enum: ['hide', 'show']
+  },
+  length: {
+    enum: ['short', 'long']
+  },
+  // source: {
+  //   enum: ['spotify', 'connect', 'none']
+  // },
+  connect: {
+    type: "boolean"
+  },
+  connect_tunnel: {
+    type: "object",
+    properties: {
+      domain: { type: "string" },
+      authtoken: { type: "string" }
+    }
+  },
+  launch: {
+    type: "boolean"
+  }
 };
 
 /* Store MUST be declared and initialised beforehand so that the functions below have access to the right reference */
-const store = new Store(schema);
+const store = new Store({ schema });
+// Do not change the order of the three. Necessary for cyclic dependency.
 module.exports.store = store;
 const { format_track, format_trackID } = require("./utils.js")
 const { ngrokSetup, ngrokShutdown, webSocketSetup, webSocketShutdown, getClients, notify, fetchIp } = require("./connect.js");
@@ -213,7 +221,7 @@ app.whenReady().then(() => {
               type: "checkbox",
               click() {
                 if (store.get("connect", false) === false) {
-                  handleWebSocketSetUp().then(()=>{
+                  handleWebSocketSetUp().then(() => {
                     store.set("connect", true);
                     contextMenu.getMenuItemById('qr').enabled = true;
                   }).catch((e) => {
@@ -221,10 +229,10 @@ app.whenReady().then(() => {
                     handleWebSocketShutdown();
                   });
                 } else {
-                  handleWebSocketShutdown().then(()=>{
+                  handleWebSocketShutdown().then(() => {
                     store.set("connect", false);
                     contextMenu.getMenuItemById('qr').enabled = false;
-                    if(qrWindow && !qrWindow.isDestroyed()) qrWindow.close();
+                    if (qrWindow && !qrWindow.isDestroyed()) qrWindow.close();
                   });
                 }
               },
@@ -243,6 +251,37 @@ app.whenReady().then(() => {
               },
             },
           ],
+        },
+        {
+          label: "Launch at Login",
+          id: "launch",
+          type: "checkbox",
+          click() {
+            if (store.get("launch", false) === false) {
+              enableLaunch(app.getAppPath().replace(/(.*?[^/]+?\.app)(\/.*)/, '$1')).then(() => {
+                store.set("launch", true);
+                trackEvent("auto_launch", { enabled: "True" });
+              }).catch((error) => {
+                store.set("launch", false);
+                contextMenu.getMenuItemById('launch').checked = false;
+                trackEvent("auto_launch", { enabled: "Crashed enabling" });
+                dialog.showMessageBox({
+                  type: 'info',
+                  message: "Could Not Add to Login",
+                  detail: "Please go to \nSettings→Privacy & Security→Automation\n and enable access to 'System Events'"
+                });
+              })
+            } else {
+              disableLaunch().then(() => {
+                store.set("launch", false);
+                trackEvent("auto_launch", { enabled: "False" });
+              }).catch((error) => {
+                store.set("launch", false)
+                trackEvent("auto_launch", { enabled: "Crashed disabling" });
+              })
+            }
+          },
+          checked: store.get("launch", false) === true,
         },
         // {
         //   label: "Send Notification On Change",
@@ -278,6 +317,10 @@ app.whenReady().then(() => {
     },
   ]);
 
+  tray.setTitle("Now Playing");
+  tray.setToolTip("See your currently playing song");
+  tray.setContextMenu(contextMenu);
+
   /* Start subscriber process */
   getCurrentSong();
 
@@ -287,10 +330,6 @@ app.whenReady().then(() => {
   -- Handle widget window creation
   -- Handle WebSocket server creation
   */
-
-  tray.setTitle("Now Playing");
-  tray.setToolTip("This is my application.");
-  tray.setContextMenu(contextMenu);
 
   if (store.get('widget', 'hide') === 'show') widget();
 
@@ -339,7 +378,7 @@ function QR() {
   // qrWindow.webContents.openDevTools();
   qrWindow.on("closed", () => {
     app.dock.hide();
-    
+
     /* Do NOT set the window to null.
       If the user closes the window then we can set it to null.
       However, if the window is being reopened (eg. click on
@@ -350,7 +389,7 @@ function QR() {
       would not be able to close it.
     */
   });
-  
+
   // Open url's on browser (careful with Electron's versions. Some solutions are deprecated)
   qrWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
@@ -387,36 +426,64 @@ let current_song = {
   trackID: "",
   album: "",
   playing: false,
-  setUp: false, //Whether the current_song has been populated
+  setUp: 0, //Whether the current_song has been populated
+  // 0: not setup
+  // 1: In the process of setting up
+  // 2: Spotify not running, filled with empty data
+  // 3: Fully set up
 }; //song, artist, album-cover
 
 // First time set-up (no event has been triggered)
 function startUpFetch() {
   //Check if song is already loaded
-  if (current_song.setUp) {
+  if (current_song.setUp == 1) return;
+  if (current_song.setUp >= 2) {
     if (widgetWindow) {
       widgetWindow.webContents.send('update-song', current_song);
       widgetWindow.webContents.send('update-player-state', current_song);
     }
     return;
   }
-  Promise.all([getCurrentSongOnce(), getState()]).then(([res, playing]) => {
-    current_song.name = res[0];
-    current_song.artist = res[1];
-    current_song.playing = playing;
-    tray.setTitle(format_track(res[0], res[1]));
-    current_song.setUp = true;
-    if (widgetWindow) {
-      widgetWindow.webContents.send('update-song', current_song);
-      widgetWindow.webContents.send('update-player-state', current_song);
-    }
-    if (getClients().size > 0) {
-      format_trackID("", 1).then((data) => {
-        notify({ ...current_song, album: data });
+  // Setting up
+  current_song.setUp = 1;
+
+  isRunning().then((res) => {
+    if (res === 'running') {
+      Promise.all([getCurrentSongOnce(), getState()]).then(([res, playing]) => {
+        current_song.name = res[0];
+        current_song.artist = res[1];
+        current_song.playing = playing;
+        current_song.setUp = 3;
+        tray.setTitle(format_track(res[0], res[1]));
+        // console.log("active listener:", format_track(res[0], res[1]));
+        if (widgetWindow) {
+          widgetWindow.webContents.send('update-song', current_song);
+          widgetWindow.webContents.send('update-player-state', current_song);
+        }
+        if (getClients().size > 0) {
+          format_trackID("", 1).then((data) => {
+            notify({ ...current_song, album: data });
+          })
+        }
+      }).catch((err) => {
+        console.debug(err)
       })
+    } else {
+      console.debug("Spotify is not running");
+      current_song.name = "Open Spotify";
+      current_song.artist = "";
+      current_song.playing = false;
+      tray.setTitle("Open Spotify");
+      current_song.setUp = 2;
+      if (widgetWindow) {
+        widgetWindow.webContents.send('update-song', current_song);
+        widgetWindow.webContents.send('update-player-state', current_song);
+      }
+      if (getClients().size > 0) {
+        notify({ ...current_song, album: "" });
+      }
+      
     }
-  }).catch((err) => {
-    console.debug(err)
   })
 }
 async function getCurrentSong() {
@@ -425,7 +492,9 @@ async function getCurrentSong() {
       current_song.name = name;
       current_song.artist = artist;
       current_song.trackID = trackID;
+      current_song.setUp = 3;
       tray.setTitle(format_track(name, artist));
+      // console.log("passive listener:", format_track(name, artist));
       if (widgetWindow) widgetWindow.webContents.send('update-song', current_song);
       if (getClients().size > 0) {
         format_trackID(trackID, 1).then((data) => {
@@ -477,7 +546,9 @@ function registerHandlers() {
   })
 
   ipcMain.handle('get-cover', async (event, trackID, args) => {
-    return await format_trackID(trackID);
+    if(current_song.setUp === 3)
+      return await format_trackID(trackID);
+    return "";
   })
 
   ipcMain.handle('get-ip', async (args) => {
@@ -497,7 +568,7 @@ function registerHandlers() {
   ipcMain.handle('get-tunnel-info', async (args) => {
     return store.get('connect_tunnel', { domain: '', authtoken: '' });
   })
-  
+
   // Testing functions
   if (process.env.NODE_ENV === 'test') {
     QR();

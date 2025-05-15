@@ -43,10 +43,12 @@ const webSocketSetup = (current_song) => {
     wss = new WebSocketServer({ port: 5050 });
     wss.on('connection', (ws) => {
         trackEvent("Connect", { clients: getClients().size });
-        if (current_song.setUp)
+        if (current_song.setUp === 3)
             format_trackID(current_song.trackID, 1).then((data) => {
                 ws.send(JSON.stringify({ type: "message", ...current_song, album: data }));
             });
+        else if (current_song.setUp === 2)
+            ws.send(JSON.stringify({ type: "message", ...current_song, album: "" }));
 
         ws.on('error', (e) => { console.error("Error:", e) });
         ws.on('close', (e) => {
