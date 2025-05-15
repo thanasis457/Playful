@@ -76,8 +76,7 @@ function widget() {
     alwaysOnTop: true,
     opacity: 1,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      sandbox: false
+      preload: path.join(__dirname, "preload.js")
     },
     skipTaskbar: true,
   })
