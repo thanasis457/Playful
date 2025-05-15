@@ -77,7 +77,7 @@ function runAppleScript(script) {
   return new Promise((resolve, reject) => {
     // console.log(process.resourcesPath);
     // console.log(process.env);
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
       exec("osascript " + script, (err, stdout, stderr) => {
         if (err) {
           console.log(err);

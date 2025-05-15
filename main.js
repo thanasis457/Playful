@@ -9,7 +9,9 @@ const {
   Notification,
   ipcMain,
 } = require("electron");
-const Store = require("electron-store");
+const Store = process.env.NODE_ENV == "test" ?
+  require('./test/electron-store.mock.js') :
+  require("electron-store");
 const axios = require("axios");
 const path = require("path");
 const config = require(path.join(__dirname, "./config.json"))
@@ -26,7 +28,6 @@ const {
 // Logging Setup
 const { initialize, trackEvent } = require("@aptabase/electron/main");
 initialize("A-US-0996094887");
-
 // Do not change the order of the three. Necessary for cyclic dependency.
 // Store will be like:
 const schema = {
@@ -297,7 +298,20 @@ app.whenReady().then(() => {
 
   if (store.get('widget', 'hide') === 'show') widget();
 
-  if (store.get('connect', false) === true) handleWebSocketSetUp();
+  if (store.get('connect', false) === true) {
+    // Disable both until setup is finished
+    contextMenu.getMenuItemById('connect').enabled = false;
+    contextMenu.getMenuItemById('qr').enabled = false;
+    handleWebSocketSetUp().then(() => {
+      contextMenu.getMenuItemById('connect').enabled = true;
+      contextMenu.getMenuItemById('qr').enabled = true;
+    }).catch((e) => {
+      store.set("connect", false);
+      contextMenu.getMenuItemById('connect').enabled = true;
+      contextMenu.getMenuItemById('connect').checked = false;
+      handleWebSocketShutdown();
+    });
+  }
 });
 
 // Throws error on failure
@@ -306,14 +320,14 @@ async function handleWebSocketSetUp() {
   if (tunnel.domain !== '')
     await ngrokSetup(tunnel.domain, tunnel.authtoken);
   webSocketSetup(current_song);
-  console.log("Setup successful")
+  console.debug("Setup successful")
 }
 
 // Guaranteed to run without errors
 async function handleWebSocketShutdown() {
   await ngrokShutdown();
   webSocketShutdown();
-  console.log("Shutdown successful")
+  console.debug("Shutdown successful")
 }
 
 function QR() {
@@ -487,6 +501,9 @@ function registerHandlers() {
   ipcMain.handle('get-tunnel-info', async (args) => {
     return store.get('connect_tunnel', { domain: '', authtoken: '' });
   })
+  
+  // Testing functions
+  if (process.env.NODE_ENV === 'test') {
+    QR();
+  }
 };
-
-module.exports.registerHandlers = registerHandlers;

@@ -31,6 +31,7 @@ const ngrokSetup = async function (domain, authtoken) {
 
 const ngrokShutdown = async function () {
     try {
+        if (ngrok_listener === null) return;
         await ngrok_listener.close(); // stops all
         ngrok_listener = null;
     } catch (err) {
@@ -99,9 +100,10 @@ const notify = (message) => {
 }
 
 const fetchIp = () => {
-    console.log(ngrok_listener.url());
-    if (ngrok_listener !== null)
+    if (ngrok_listener !== null){
+        console.log(ngrok_listener.url());
         return ngrok_listener.url();
+    }
 
     // Fetch local wifi ip
     const nets = networkInterfaces();
