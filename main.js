@@ -100,9 +100,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('will-quit', (event) => {
-  app.quit()
-})
 let tray = null;
 
 app.whenReady().then(() => {
