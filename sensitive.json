@@ -1,5 +1,0 @@
-{
-  "client_id": "YOUR_CLIENT_ID",
-  "redirect_uri": "http://localhost:8080/",
-  "uri_port": 8080
-}

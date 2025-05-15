@@ -51,7 +51,7 @@ let prevController = [
 
 // Returns the Album URL from the trackID
 // Subscribe to up to five channels (0-4). Each channel maintains order consistency
-function format_trackID(trackID, spot_instance, channel = 0) {
+function format_trackID(trackID, channel = 0) {
     if (!net.isOnline()) {
         return getAlbumCoverArt();
     } else {

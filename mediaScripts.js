@@ -1,7 +1,7 @@
 const { exec } = require("child_process");
 const path = require("path");
 
-function getCurrentSongOnce({ store, spot_instance }) {
+function getCurrentSongOnce() {
   return new Promise((resolve, reject) => {
     runAppleScript("compiledFunctions/running.scpt").then((res) => {
       if (res === "running") {
@@ -29,7 +29,7 @@ function getAlbumCoverArt() {
   });
 }
 
-function togglePlay({ store, spot_instance }) {
+function togglePlay() {
   return new Promise((resolve, reject) => {
     runAppleScript("compiledFunctions/state.scpt").then((res) => {
       console.log("received res", res);
@@ -44,13 +44,13 @@ function togglePlay({ store, spot_instance }) {
   });
 }
 
-function playNext({ store, spot_instance }) {
+function playNext() {
   return new Promise((resolve, reject) => {
     runAppleScript("compiledFunctions/next.scpt").then(() => resolve());
   });
 }
 
-function playPrevious({ store, spot_instance }) {
+function playPrevious() {
   return new Promise((resolve, reject) => {
     runAppleScript("compiledFunctions/previous.scpt").then(() => resolve());
   });
@@ -77,7 +77,7 @@ function runAppleScript(script) {
   return new Promise((resolve, reject) => {
     // console.log(process.resourcesPath);
     // console.log(process.env);
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
       exec("osascript " + script, (err, stdout, stderr) => {
         if (err) {
           console.log(err);
@@ -104,7 +104,7 @@ function runAppleScript(script) {
   });
 }
 
-function getState({ store }) {
+function getState() {
   return new Promise((resolve, reject) => {
     runAppleScript("compiledFunctions/state.scpt")
       .then((res) => {

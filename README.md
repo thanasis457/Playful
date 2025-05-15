@@ -40,6 +40,13 @@ If you want to make your own distributable version of the app (.dmg files), run:
 `npm run make`  
 This will create a folder named `out`. At the path `out/make/zip/darwin/` you will find a zip file. This is your distributable.
 
+### Testing
+The testing framework being used is [WebdriverIO](https://webdriver.io/).
+
+To run tests: `npm run test`
+
+You can find all tests in the `test/` directory.
+
 ### Notes
 
 - The App icons are not mine. They are provided by Icons8 and can be found [here](https://icons8.com/icon/116726/spotify)

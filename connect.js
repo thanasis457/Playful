@@ -1,8 +1,8 @@
 const ngrok = require("@ngrok/ngrok");
 const { format_trackID } = require("./utils.js")
 const { WebSocketServer } = require("ws");
-const { store } = require("./main.js");
 const { networkInterfaces } = require("os")
+const { trackEvent } = require("@aptabase/electron/main");
 
 const {
     togglePlay,
@@ -31,6 +31,7 @@ const ngrokSetup = async function (domain, authtoken) {
 
 const ngrokShutdown = async function () {
     try {
+        if (ngrok_listener === null) return;
         await ngrok_listener.close(); // stops all
         ngrok_listener = null;
     } catch (err) {
@@ -38,11 +39,12 @@ const ngrokShutdown = async function () {
     }
 };
 
-const webSocketSetup = (current_song, spot_instance) => {
+const webSocketSetup = (current_song) => {
     wss = new WebSocketServer({ port: 5050 });
     wss.on('connection', (ws) => {
+        trackEvent("Connect", { clients: getClients().size });
         if (current_song.setUp)
-            format_trackID(current_song.trackID, spot_instance, 1).then((data) => {
+            format_trackID(current_song.trackID, 1).then((data) => {
                 ws.send(JSON.stringify({ type: "message", ...current_song, album: data }));
             });
 
@@ -50,6 +52,7 @@ const webSocketSetup = (current_song, spot_instance) => {
         ws.on('close', (e) => {
             console.error("Closed:", e);
             clearInterval(keepAlive);
+            trackEvent("Disconnect", { clients: getClients().size });
         });
 
         ws.on('message', function message(data) {
@@ -58,11 +61,11 @@ const webSocketSetup = (current_song, spot_instance) => {
             */
             const action = data.toString();
             if (action === 'next')
-                playNext({ store, spot_instance });
+                playNext();
             if (action === 'prev')
-                playPrevious({ store, spot_instance })
+                playPrevious()
             if (action === 'play')
-                togglePlay({ store, spot_instance });
+                togglePlay();
             console.log("Received: %s", data)
         });
 
@@ -74,6 +77,9 @@ const webSocketSetup = (current_song, spot_instance) => {
 
 const webSocketShutdown = () => {
     try {
+        wss.clients.forEach((client) => {
+            client.terminate();
+        });
         wss.close();
         wss = null;
     } catch (err) {
@@ -94,9 +100,10 @@ const notify = (message) => {
 }
 
 const fetchIp = () => {
-    console.log(ngrok_listener.url());
-    if (ngrok_listener !== null)
+    if (ngrok_listener !== null){
+        console.log(ngrok_listener.url());
         return ngrok_listener.url();
+    }
 
     // Fetch local wifi ip
     const nets = networkInterfaces();

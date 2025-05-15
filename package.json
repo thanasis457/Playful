@@ -1,15 +1,16 @@
 {
   "name": "Playful",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "Shows the current playing song. Made to show spotify songs.",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "wdio run ./wdio.conf.js",
     "start": "NODE_ENV=development electron-forge start",
     "prod": "NODE_ENV=production electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "install": "cmake-js compile"
+    "install": "cmake-js compile",
+    "wdio": "wdio run ./wdio.conf.js"
   },
   "binary": {
     "napi_versions": [
@@ -26,9 +27,15 @@
     "@electron-forge/maker-squirrel": "^6.0.0-beta.65",
     "@electron-forge/maker-zip": "^6.0.0-beta.65",
     "@electron/rebuild": "^3.6.0",
-    "electron": "^31.0.1"
+    "@wdio/cli": "^9.12.7",
+    "@wdio/local-runner": "^9.12.7",
+    "@wdio/mocha-framework": "^9.12.6",
+    "@wdio/spec-reporter": "^9.12.6",
+    "electron": "^31.0.1",
+    "wdio-electron-service": "^8.1.0"
   },
   "dependencies": {
+    "@aptabase/electron": "^0.3.1",
     "@ngrok/ngrok": "^1.5.0",
     "axios": "^1.7.2",
     "bindings": "^1.5.0",
