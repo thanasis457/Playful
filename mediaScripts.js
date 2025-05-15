@@ -1,22 +1,25 @@
 const { exec } = require("child_process");
 const path = require("path");
 
-function getCurrentSongOnce() {
+function isRunning() {
   return new Promise((resolve, reject) => {
     runAppleScript("compiledFunctions/running.scpt").then((res) => {
-      if (res === "running") {
-        runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
-          res = res.split("+").slice(0, 2);
-          res.push(null);
-          resolve(res);
-        });
-      } else {
-        resolve(["Open Spotify", "", null])
-      }
+      resolve(res);
+    }).catch((err) => {
+      reject(err);
+    });
+  })
+}
+
+function getCurrentSongOnce() {
+  return new Promise((resolve, reject) => {
+    runAppleScript("compiledFunctions/currentTrack.scpt").then((res) => {
+      res = res.split("+").slice(0, 2);
+      res.push(null);
+      resolve(res);
+    }).catch((err) => {
+      reject(err);
     })
-      .catch((err) => {
-        reject(err);
-      })
   });
 }
 
@@ -83,7 +86,6 @@ function runAppleScript(script) {
           console.log(err);
           reject(err);
         } else {
-          // console.log(stdout);
           resolve(stdout.trim());
         }
       });
@@ -121,8 +123,34 @@ function getState() {
   });
 }
 
+function enableLaunch(appPath) {
+  return new Promise((resolve, reject) => {
+    runAppleScript("compiledFunctions/launch.scpt \"" + appPath + "\"")
+      .then(() => {
+        resolve();
+      })
+      .catch((err) => {
+        console.log("received err", err);
+        reject(err);
+      });
+  });
+}
+
+function disableLaunch() {
+  return new Promise((resolve, reject) => {
+    runAppleScript("compiledFunctions/remove_launch.scpt")
+      .then(() => {
+        resolve();
+      })
+      .catch((err) => {
+        console.log("received err", err);
+        reject(err);
+      });
+  });
+}
 
 module.exports = {
+  isRunning,
   togglePlay,
   playNext,
   playPrevious,
@@ -130,4 +158,6 @@ module.exports = {
   getCurrentSongOnce,
   getState,
   getAlbumCoverArt,
+  enableLaunch,
+  disableLaunch
 };
