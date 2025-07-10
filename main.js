@@ -112,7 +112,15 @@ let tray = null;
 
 app.whenReady().then(() => {
   registerHandlers();
+
   trackEvent("app_started");
+  setInterval(() => {
+    trackEvent("app_alive", {
+      time_alive: "45mins",
+      song: current_song.name + ", " + current_song.artist
+    })
+  }, 45 * 60 * 1000)
+
   app.dock.hide();
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
   let trayIcon = nativeImage
