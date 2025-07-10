@@ -112,7 +112,17 @@ let tray = null;
 
 app.whenReady().then(() => {
   registerHandlers();
+
   trackEvent("app_started");
+  let timer_counter = 0;
+  setInterval(() => {
+    timer_counter += 45;
+    trackEvent("app_alive", {
+      time_alive: timer_counter.toString() + "mins",
+      song: current_song.name + ", " + current_song.artist
+    })
+  }, 45 * 60 * 1000)
+
   app.dock.hide();
   var iconPath = path.join(__dirname, "icons/spotify.png"); // your png tray icon
   let trayIcon = nativeImage
@@ -160,7 +170,7 @@ app.whenReady().then(() => {
           type: "submenu",
           submenu: [
             {
-              label: "Hide",
+              label: "Off",
               type: "radio",
               click() {
                 store.set("widget", "hide");
@@ -172,7 +182,7 @@ app.whenReady().then(() => {
               checked: store.get("widget", "hide") === "hide",
             },
             {
-              label: "Show",
+              label: "On",
               type: "radio",
               click() {
                 if (!widgetWindow) {
@@ -212,7 +222,7 @@ app.whenReady().then(() => {
           ],
         },
         {
-          label: "Spotify Connect - App",
+          label: "Playful Connect",
           type: "submenu",
           submenu: [
             {
