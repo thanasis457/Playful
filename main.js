@@ -114,9 +114,11 @@ app.whenReady().then(() => {
   registerHandlers();
 
   trackEvent("app_started");
+  let timer_counter = 0;
   setInterval(() => {
+    timer_counter += 45;
     trackEvent("app_alive", {
-      time_alive: "45mins",
+      time_alive: timer_counter.toString() + "mins",
       song: current_song.name + ", " + current_song.artist
     })
   }, 45 * 60 * 1000)
