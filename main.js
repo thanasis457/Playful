@@ -160,7 +160,7 @@ app.whenReady().then(() => {
           type: "submenu",
           submenu: [
             {
-              label: "Hide",
+              label: "Off",
               type: "radio",
               click() {
                 store.set("widget", "hide");
@@ -172,7 +172,7 @@ app.whenReady().then(() => {
               checked: store.get("widget", "hide") === "hide",
             },
             {
-              label: "Show",
+              label: "On",
               type: "radio",
               click() {
                 if (!widgetWindow) {
@@ -212,7 +212,7 @@ app.whenReady().then(() => {
           ],
         },
         {
-          label: "Spotify Connect - App",
+          label: "Playful Connect",
           type: "submenu",
           submenu: [
             {
