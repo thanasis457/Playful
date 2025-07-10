@@ -1,6 +1,6 @@
 {
   "name": "Playful",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "description": "Shows the current playing song. Made to show spotify songs.",
   "main": "main.js",
   "scripts": {
@@ -37,7 +37,7 @@
   "dependencies": {
     "@aptabase/electron": "^0.3.1",
     "@ngrok/ngrok": "^1.5.0",
-    "axios": "^1.7.2",
+    "axios": "^1.8.2",
     "bindings": "^1.5.0",
     "cmake-js": "^7.3.0",
     "electron-store": "^8.1.0",
