@@ -30,7 +30,6 @@ jobs:
 
     - name: Show Swift version and architecture
       run: |
-        uname -m
         swiftc --version
         file $(which swiftc)
         arch
