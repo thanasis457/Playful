@@ -23,6 +23,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_options(${PROJECT_NAME} PRIVATE -fvisibility=hidden)
     set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN "YES")
 endif()
+execute_process(
+  COMMAND uname -m
+  OUTPUT_VARIABLE HOST_ARCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
 # Link Node.js addon API
 execute_process(COMMAND node -p "require('node-addon-api').targets" OUTPUT_VARIABLE NODE_ADDON_API_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -50,7 +55,7 @@ set(SWIFT_SOURCES ${CMAKE_SOURCE_DIR}/mediaSubscriber.swift)
 set(SWIFT_OUTPUT ${CMAKE_SOURCE_DIR}/libMediaSubscriber.dylib)
 add_custom_command(
     OUTPUT ${SWIFT_OUTPUT}
-    COMMAND swiftc -emit-library -target $(uname -m)-apple-macosx11.0 ${SWIFT_SOURCES} -o ${SWIFT_OUTPUT}
+    COMMAND swiftc -emit-library -target ${HOST_ARCH}-apple-macosx11.0 ${SWIFT_SOURCES} -o ${SWIFT_OUTPUT}
     DEPENDS ${SWIFT_SOURCES}
     COMMENT "Compiling Swift code"
 )
