@@ -50,7 +50,7 @@ set(SWIFT_SOURCES ${CMAKE_SOURCE_DIR}/mediaSubscriber.swift)
 set(SWIFT_OUTPUT ${CMAKE_SOURCE_DIR}/libMediaSubscriber.dylib)
 add_custom_command(
     OUTPUT ${SWIFT_OUTPUT}
-    COMMAND swiftc -emit-library -target arm64-apple-macosx11.0 ${SWIFT_SOURCES} -o ${SWIFT_OUTPUT}
+    COMMAND swiftc -emit-library -target arm64-apple-macosx11.0 -target x86_64-apple-macos11.0 ${SWIFT_SOURCES} -o ${SWIFT_OUTPUT}
     DEPENDS ${SWIFT_SOURCES}
     COMMENT "Compiling Swift code"
 )
