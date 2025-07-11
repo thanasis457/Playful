@@ -62,4 +62,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Playful-darwin-amd64
-        path: /Users/runner/work/Playful/Playful/out/make
+        path: ${{ env.DMG_OUTPUT }}/Playful_apple_silicon.zip
