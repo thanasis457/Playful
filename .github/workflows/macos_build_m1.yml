@@ -114,6 +114,7 @@ jobs:
     - name: Self-sign - Avoid Gatekeeper DMG corrupted warning
       run: |
         echo "Unzipping"
+        cd ./out/make/zip/darwin/ && ls
         unzip -q ${{ env.DMG_OUTPUT_INTEL }}/Playful*.zip -d ${{ env.DMG_OUTPUT_INTEL }}
         echo "Removing zip"
         rm -rf ${{ env.DMG_OUTPUT_INTEL }}/Playful*.zip
