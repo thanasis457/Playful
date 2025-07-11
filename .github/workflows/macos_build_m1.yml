@@ -53,6 +53,10 @@ jobs:
         rm -rf ${{ env.DMG_OUTPUT }}/Playful*.zip
         echo "Codesigning"
         codesign --force --deep -s - ${{ env.DMG_OUTPUT }}/Playful.app
+        echo "Zipping"
+        ls
+        echo "Targeted"
+        cd /Users/runner/work/Playful/Playful//out/make/zip/darwin/arm64 && ls
         
         zip -r ${{ env.DMG_OUTPUT }}/Playful_apple_silicon.zip ${{ env.DMG_OUTPUT }}/Playful.app
         rm -rf ${{ env.DMG_OUTPUT }}/Playful.app
