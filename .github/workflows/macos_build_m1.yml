@@ -4,7 +4,7 @@
 name: MacOS NodeJS-CMake
 env:
   DMG_OUTPUT: ${{github.workspace}}${{ '/out/make/zip/darwin/arm64'}}
-  DMG_OUTPUT_INTEL: ${{github.workspace}}${{ '/out/make/zip/darwin/x86_64'}}
+  DMG_OUTPUT_INTEL: ${{github.workspace}}${{ '/out/make/zip/darwin/x64'}}
 on:
   push:
     branches: [ "master" ]
