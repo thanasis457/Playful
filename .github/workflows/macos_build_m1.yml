@@ -54,11 +54,8 @@ jobs:
         echo "Codesigning"
         codesign --force --deep -s - ${{ env.DMG_OUTPUT }}/Playful.app
         echo "Zipping"
-        ls
-        echo "Targeted"
-        cd ${{ env.DMG_OUTPUT }} && ls
-        
         cd ${{ env.DMG_OUTPUT }} && zip -r Playful_apple_silicon.zip Playful.app
+        echo "Removing .app"
         rm -rf ${{ env.DMG_OUTPUT }}/Playful.app
     
     - name: Upload Build File
