@@ -3,7 +3,7 @@
 
 name: MacOS NodeJS-CMake
 env:
-  DMG_OUTPUT: ${{github.workspace}}/${{ runner.arch == 'ARM64' && Playful/out/make/zip/darwin/arm64/ || Playful/out/make/zip/darwin/x64/}}
+  DMG_OUTPUT: ${{github.workspace}}/${{ runner.arch == 'ARM64' && 'Playful/out/make/zip/darwin/arm64/' || 'Playful/out/make/zip/darwin/x64/'}}
 on:
   push:
     branches: [ "master" ]
