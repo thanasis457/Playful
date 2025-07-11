@@ -3,7 +3,7 @@
 
 name: MacOS NodeJS-CMake
 env:
-  DMG_OUTPUT: ${{github.workspace}}/${{ 'Playful/out/make/zip/darwin/*64/'}}
+  DMG_OUTPUT: ${{github.workspace}}/${{ '/out/make/zip/darwin/*64/'}}
 on:
   push:
     branches: [ "master" ]
@@ -49,9 +49,9 @@ jobs:
       run: |
         pwd
         ls
-        cd /Users/runner/work/Playful/Playful/Playful/out/make/ && ls
-        cd /Users/runner/work/Playful/Playful/Playful/out/make/zip && ls
-        cd /Users/runner/work/Playful/Playful/Playful/out/make/zip/darwin/ && ls
+        cd /Users/runner/work/Playful/Playful/out/make/ && ls
+        cd /Users/runner/work/Playful/Playful/out/make/zip && ls
+        cd /Users/runner/work/Playful/Playful/out/make/zip/darwin/ && ls
         unzip ${{ env.DMG_OUTPUT }}/Playful*.zip
         rm -rf ${{ env.DMG_OUTPUT }}/Playful*.zip
         codesign --force --deep -s ${{ env.DMG_OUTPUT }}/Playful.app
