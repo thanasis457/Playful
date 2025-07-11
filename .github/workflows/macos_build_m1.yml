@@ -3,7 +3,7 @@
 
 name: MacOS NodeJS-CMake
 env:
-  DMG_OUTPUT: ${{github.workspace}}/${{ '/out/make/zip/darwin/*64/'}}
+  DMG_OUTPUT: ${{github.workspace}}${{ '/out/make/zip/darwin/arm64'}}
 on:
   push:
     branches: [ "master" ]
@@ -56,9 +56,9 @@ jobs:
         echo "Zipping"
         ls
         echo "Targeted"
-        cd /Users/runner/work/Playful/Playful//out/make/zip/darwin/arm64 && ls
+        cd ${{ env.DMG_OUTPUT }} && ls
         
-        zip -r ${{ env.DMG_OUTPUT }}/Playful_apple_silicon.zip ${{ env.DMG_OUTPUT }}/Playful.app
+        cd ${{ env.DMG_OUTPUT }} && zip -r Playful_apple_silicon.zip Playful.app
         rm -rf ${{ env.DMG_OUTPUT }}/Playful.app
     
     - name: Upload Build File
