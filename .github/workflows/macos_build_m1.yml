@@ -64,7 +64,7 @@ jobs:
         echo "Zipping"
         cd ${{ env.DMG_OUTPUT }} && zip -q -r Playful_apple_silicon.zip Playful.app
         echo "Removing .app"
-        rm -rf ${{ env.DMG_OUTPUT }}/Playful.app
+        rm -rf ${{ env.DMG_OUTPUT }}/Playful_apple_silicon.zip
     
     - name: Upload Build File
       uses: actions/upload-artifact@v4
@@ -121,9 +121,9 @@ jobs:
         echo "Codesigning"
         codesign --force --deep -s - ${{ env.DMG_OUTPUT_INTEL }}/Playful.app
         echo "Zipping"
-        cd ${{ env.DMG_OUTPUT_INTEL }} && zip -q -r Playful_apple_silicon.zip Playful.app
+        cd ${{ env.DMG_OUTPUT_INTEL }} && zip -q -r Playful_intel.zip Playful.app
         echo "Removing .app"
-        rm -rf ${{ env.DMG_OUTPUT_INTEL }}/Playful.app
+        rm -rf ${{ env.DMG_OUTPUT_INTEL }}/Playful_intel.zip
     
     - name: Upload Build File
       uses: actions/upload-artifact@v4
