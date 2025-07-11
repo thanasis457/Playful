@@ -3,7 +3,7 @@
 
 name: MacOS NodeJS-CMake
 env:
-  DMG_OUTPUT: ${{github.workspace}}/${{ 'Playful/out/make/zip/darwin/*64/ '}}
+  DMG_OUTPUT: ${{github.workspace}}/${{ 'Playful/out/make/zip/darwin/*64/'}}
 on:
   push:
     branches: [ "master" ]
