@@ -48,13 +48,9 @@ jobs:
     - name: Self-sign - Avoid Gatekeeper DMG corrupted warning
       run: |
         pwd
-        ls
-        cd /Users/runner/work/Playful/Playful/out/make/ && ls
-        cd /Users/runner/work/Playful/Playful/out/make/zip && ls
-        cd /Users/runner/work/Playful/Playful/out/make/zip/darwin/ && ls
         unzip ${{ env.DMG_OUTPUT }}/Playful*.zip
         rm -rf ${{ env.DMG_OUTPUT }}/Playful*.zip
-        codesign --force --deep -s ${{ env.DMG_OUTPUT }}/Playful.app
+        codesign --force --deep -s - ${{ env.DMG_OUTPUT }}/Playful.app
         zip ${{ env.DMG_OUTPUT }}/Playful-apple-silicon.zip ${{ env.DMG_OUTPUT }}/Playful.app
         rm -rf ${{ env.DMG_OUTPUT }}/Playful.app
     
