@@ -4,6 +4,7 @@
 name: MacOS NodeJS-CMake
 env:
   DMG_OUTPUT: ${{github.workspace}}${{ '/out/make/zip/darwin/arm64'}}
+  DMG_OUTPUT_INTEL: ${{github.workspace}}${{ '/out/make/zip/darwin/x86'}}
 on:
   push:
     branches: [ "master" ]
@@ -12,7 +13,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  M1Build:
 
     runs-on: macos-latest
 
@@ -59,13 +60,63 @@ jobs:
         rm -rf ${{ env.DMG_OUTPUT }}/Playful*.zip
         echo "Codesigning"
         codesign --force --deep -s - ${{ env.DMG_OUTPUT }}/Playful.app
-        echo "Zipping"
-        cd ${{ env.DMG_OUTPUT }} && zip -q -r Playful_apple_silicon.zip Playful.app
-        echo "Removing .app"
-        rm -rf ${{ env.DMG_OUTPUT }}/Playful.app
     
     - name: Upload Build File
       uses: actions/upload-artifact@v4
       with:
         name: Playful-darwin-amd64
-        path: ${{ env.DMG_OUTPUT }}/Playful_apple_silicon.zip
+        path: ${{ env.DMG_OUTPUT }}/Playful.app
+  
+  IntelBuild:
+
+    runs-on: macos-13
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v2
+      with:
+        cmake-version: '3.16.x'
+
+    - name: Show Swift version and architecture
+      run: |
+        swiftc --version
+        file $(which swiftc)
+        arch
+
+    - name: Use cmake
+      run: cmake --version
+
+    - name: Checkout Action
+      uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install nodejs dependencies
+      run: npm i
+    
+    - name: Build
+      run: npm run make
+
+    - name: Self-sign - Avoid Gatekeeper DMG corrupted warning
+      run: |
+        echo "Unzipping"
+        unzip -q ${{ env.DMG_OUTPUT_INTEL }}/Playful*.zip -d ${{ env.DMG_OUTPUT_INTEL }}
+        echo "Removing zip"
+        rm -rf ${{ env.DMG_OUTPUT_INTEL }}/Playful*.zip
+        echo "Codesigning"
+        codesign --force --deep -s - ${{ env.DMG_OUTPUT_INTEL }}/Playful.app
+    
+    - name: Upload Build File
+      uses: actions/upload-artifact@v4
+      with:
+        name: Playful-darwin-intel
+        path: ${{ env.DMG_OUTPUT_INTEL }}/Playful.app
