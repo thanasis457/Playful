@@ -49,6 +49,8 @@ jobs:
       run: |
         pwd
         ls
+        cd /Users/runner/work/Playful/Playful/Playful/out/make/ && ls
+        cd /Users/runner/work/Playful/Playful/Playful/out/make/zip && ls
         cd /Users/runner/work/Playful/Playful/Playful/out/make/zip/darwin/ && ls
         unzip ${{ env.DMG_OUTPUT }}/Playful*.zip
         rm -rf ${{ env.DMG_OUTPUT }}/Playful*.zip
