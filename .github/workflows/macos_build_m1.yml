@@ -43,6 +43,14 @@ jobs:
     
     - name: Build
       run: npm run make
+
+    - name: Self-sign - Avoid Gatekeeper DMG corrupted warning
+      run: |
+        unzip /Users/runner/work/Playful/Playful/out/make/Playful*.zip
+        rm -rf /Users/runner/work/Playful/Playful/out/make/Playful*.zip
+        codesign --force --deep -s Playful.app
+        zip /Users/runner/work/Playful/Playful/out/make/Playful-apple-silicon.zip /Users/runner/work/Playful/Playful/out/make/Playful.app
+        rm -rf Playful.app
     
     - name: Upload Build File
       uses: actions/upload-artifact@v4
