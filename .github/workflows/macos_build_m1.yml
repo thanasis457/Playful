@@ -26,9 +26,15 @@ jobs:
       uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: '3.16.x'
-    
+
+    - name: Show Swift version and architecture
+      run: |
+        swiftc --version
+        file $(which swiftc)
+        arch
+
     - name: Use cmake
-      run: arch
+      run: cmake --version
 
     - name: Checkout Action
       uses: actions/checkout@v4
