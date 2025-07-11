@@ -50,7 +50,7 @@ set(SWIFT_SOURCES ${CMAKE_SOURCE_DIR}/mediaSubscriber.swift)
 set(SWIFT_OUTPUT ${CMAKE_SOURCE_DIR}/libMediaSubscriber.dylib)
 add_custom_command(
     OUTPUT ${SWIFT_OUTPUT}
-    COMMAND swiftc -emit-library -target ${HOST_ARCH}-apple-macosx11.0 ${SWIFT_SOURCES} -o ${SWIFT_OUTPUT}
+    COMMAND swiftc -emit-library ${SWIFT_SOURCES} -o ${SWIFT_OUTPUT}
     DEPENDS ${SWIFT_SOURCES}
     COMMENT "Compiling Swift code"
 )
@@ -60,7 +60,7 @@ add_custom_target(SwiftCode ALL DEPENDS ${SWIFT_OUTPUT})
 add_dependencies(${PROJECT_NAME} SwiftCode)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_INSTALL_NAME_TOOL} "@loader_path/libMediaSubscriber.dylib" MediaSubscriber.node
+    COMMAND ${CMAKE_INSTALL_NAME_TOOL} -change ${SWIFT_OUTPUT} "@loader_path/libMediaSubscriber.dylib" MediaSubscriber.node
     COMMENT "Changing deps"
 )
 
