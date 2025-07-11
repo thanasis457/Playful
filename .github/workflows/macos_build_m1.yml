@@ -28,7 +28,7 @@ jobs:
         cmake-version: '3.16.x'
     
     - name: Use cmake
-      run: cmake --version
+      run: arch
 
     - name: Checkout Action
       uses: actions/checkout@v4
