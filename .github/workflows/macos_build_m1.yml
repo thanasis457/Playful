@@ -62,7 +62,7 @@ jobs:
         echo "Codesigning"
         codesign --force --deep -s - ${{ env.DMG_OUTPUT }}/Playful.app
         echo "Zipping"
-        cd ${{ env.DMG_OUTPUT }} && zip -q -r Playful_apple_silicon.zip Playful.app
+        cd ${{ env.DMG_OUTPUT }} && zip -q -r -y Playful_apple_silicon.zip Playful.app
         echo "Removing .app"
         rm -rf ${{ env.DMG_OUTPUT }}/Playful.app
     
@@ -121,7 +121,7 @@ jobs:
         echo "Codesigning"
         codesign --force --deep -s - ${{ env.DMG_OUTPUT_INTEL }}/Playful.app
         echo "Zipping"
-        cd ${{ env.DMG_OUTPUT_INTEL }} && zip -q -r Playful_intel.zip Playful.app
+        cd ${{ env.DMG_OUTPUT_INTEL }} && zip -q -r -y Playful_intel.zip Playful.app
         echo "Removing .app"
         rm -rf ${{ env.DMG_OUTPUT_INTEL }}/Playful.app
     
