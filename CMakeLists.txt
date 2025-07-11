@@ -23,11 +23,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_options(${PROJECT_NAME} PRIVATE -fvisibility=hidden)
     set_target_properties(${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN "YES")
 endif()
-execute_process(
-  COMMAND uname -m
-  OUTPUT_VARIABLE HOST_ARCH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
 
 # Link Node.js addon API
 execute_process(COMMAND node -p "require('node-addon-api').targets" OUTPUT_VARIABLE NODE_ADDON_API_INCLUDE_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -65,7 +60,7 @@ add_custom_target(SwiftCode ALL DEPENDS ${SWIFT_OUTPUT})
 add_dependencies(${PROJECT_NAME} SwiftCode)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_INSTALL_NAME_TOOL} -change ${SWIFT_OUTPUT} "@loader_path/libMediaSubscriber.dylib" MediaSubscriber.node
+    COMMAND ${CMAKE_INSTALL_NAME_TOOL} "@loader_path/libMediaSubscriber.dylib" MediaSubscriber.node
     COMMENT "Changing deps"
 )
 
