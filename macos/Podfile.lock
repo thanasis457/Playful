@@ -1,0 +1,28 @@
+PODS:
+  - desktop_multi_window (0.0.1):
+    - FlutterMacOS
+  - FlutterMacOS (1.0.0)
+  - system_tray (0.0.1):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - desktop_multi_window (from `Flutter/ephemeral/.symlinks/plugins/desktop_multi_window/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - system_tray (from `Flutter/ephemeral/.symlinks/plugins/system_tray/macos`)
+
+EXTERNAL SOURCES:
+  desktop_multi_window:
+    :path: Flutter/ephemeral/.symlinks/plugins/desktop_multi_window/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  system_tray:
+    :path: Flutter/ephemeral/.symlinks/plugins/system_tray/macos
+
+SPEC CHECKSUMS:
+  desktop_multi_window: 93667594ccc4b88d91a97972fd3b1b89667fa80a
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  system_tray: 53f0cdb020c3fbee711d3fe45ae7ce730e033d2b
+
+PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+
+COCOAPODS: 1.16.2
