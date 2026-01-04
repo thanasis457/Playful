@@ -8,9 +8,9 @@ g++ -shared lib/swift/MediaMiddleman.o -lMediaSubscriber -L./lib/swift -o lib/sw
 install_name_tool -change lib/swift/libMediaSubscriber.dylib @rpath/libMediaSubscriber.dylib lib/swift/libMediaMiddleman.dylib
 install_name_tool -add_rpath @loader_path lib/swift/libMediaMiddleman.dylib
 
-echo "Attaching shared libraries to Xcode project..."
-cp lib/swift/libMediaSubscriber.dylib macos/
-cp lib/swift/libMediaMiddleman.dylib macos/
+echo "Adding to Xcode..."
+cp lib/swift/MediaSubscriber.dylib macos/
+cp lib/swift/MediaMiddleman.dylib macos/
 
 echo "Running app..."
-flutter run -d macos
+flutter build macos --release
