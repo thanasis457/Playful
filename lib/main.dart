@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:playful_dart/media_controller.dart';
 import 'package:playful_dart/media_listener.dart';
 import 'dart:io' show exit;
 import 'package:system_tray/system_tray.dart';
@@ -55,7 +56,7 @@ class MenuBarManager {
     await menu.buildFrom([
       MenuItemLabel(
         label: 'Play / Pause',
-        onClicked: (menuItem) => appWindow.show(),
+        onClicked: (menuItem) => togglePlay(),
       ),
       MenuItemLabel(label: 'Next', onClicked: (menuItem) => appWindow.hide()),
       MenuItemLabel(label: 'Exit', onClicked: (menuItem) => exit(0)),

@@ -1,7 +1,7 @@
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:ffi' as ffi;
-import 'dart:io' show Directory;
+import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:playful_dart/main.dart';
 
