@@ -3,21 +3,17 @@ import 'package:playful_dart/media_controller.dart';
 import 'package:playful_dart/media_listener.dart';
 import 'dart:io' show exit;
 import 'package:system_tray/system_tray.dart';
-import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:window_manager/window_manager.dart';
 
 enum SongLength { long, short }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  MenuBarManager();
-
-  final controllers = await WindowController.getAll();
-
+  await windowManager.ensureInitialized();
   // Hide the initial window
-  for (var controller in controllers) {
-    await controller.hide();
-  }
-
+  windowManager.close();
+  
+  MenuBarManager();
   runApp(const Playful());
 
   // Start listening

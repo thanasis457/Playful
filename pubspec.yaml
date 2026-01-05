@@ -37,7 +37,7 @@ dependencies:
   ffi: ^2.1.4
   path: ^1.9.1
   system_tray: ^2.0.3
-  desktop_multi_window: ^0.3.0
+  window_manager: ^0.5.1
 
 dev_dependencies:
   flutter_test:
