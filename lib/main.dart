@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:playful_dart/media_controller.dart';
 import 'package:playful_dart/media_listener.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
+import 'package:playful_dart/my_aptabase.dart';
 
 enum SongLength { long, short }
 
@@ -15,6 +18,7 @@ void main() async {
   await windowManager.ensureInitialized();
   // Hide the initial window
   windowManager.close();
+  await MyAptabase.init("A-US-0996094887");
 
   MenuBarManager();
   runApp(const Playful());
@@ -40,11 +44,31 @@ class MenuBarManager {
       ? SongLength.short
       : SongLength.long;
   static late final SharedPreferences store;
+  static late final PackageInfo packageInfo;
 
   /// Builds the menu bar options
   MenuBarManager() {
-    SharedPreferences.getInstance().then((prefs) => store = prefs);
-    initMenuBar();
+    Future.wait<dynamic>([
+      SharedPreferences.getInstance(),
+      PackageInfo.fromPlatform(),
+    ]).then((result) {
+      // Fetch results from futures above
+      store = result[0] as SharedPreferences;
+      packageInfo = result[1] as PackageInfo;
+
+      // Init anonymous tracking
+      MyAptabase.instance.trackEvent('app_started');
+      // Init the menu bar
+      initMenuBar();
+      // Init app alive timer
+      Timer.periodic(const Duration(minutes: 45), (timer) {
+        MyAptabase.instance.trackEvent('app_alive', {
+          'time_alive': '${timer.tick * 45}mins',
+          'song':
+              '${MediaListener.currentSong.name}, ${MediaListener.currentSong.artist}',
+        });
+      });
+    });
   }
 
   Future<void> initMenuBar() async {
@@ -86,6 +110,9 @@ class MenuBarManager {
                   item.setCheck(true);
                   (menu.findItemByName('long_length') as MenuItemCheckbox)
                       .setCheck(false);
+                  MyAptabase.instance.trackEvent('text length', {
+                    'length': 'short',
+                  });
                 },
               ),
               MenuItemCheckbox(
@@ -99,6 +126,9 @@ class MenuBarManager {
                   item.setCheck(true);
                   (menu.findItemByName('short_length') as MenuItemCheckbox)
                       .setCheck(false);
+                  MyAptabase.instance.trackEvent('text length', {
+                    'length': 'long',
+                  });
                 },
               ),
             ],
@@ -118,17 +148,28 @@ class MenuBarManager {
                   );
                   await store.setBool('launch', true);
                   item.setCheck(true);
+                  MyAptabase.instance.trackEvent('auto_launch', {
+                    'enabled': 'True',
+                  });
                 } catch (e) {
                   await store.setBool('launch', false);
                   item.setCheck(false);
+                  MyAptabase.instance.trackEvent('auto_launch', {
+                    'enabled': 'Crashed enabling',
+                  });
                 }
               } else {
                 try {
                   await disableLaunch();
-                  await store.setBool('launch', false);
+                  MyAptabase.instance.trackEvent('auto_launch', {
+                    'enabled': 'False',
+                  });
                 } catch (e) {
-                  await store.setBool('launch', false);
+                  MyAptabase.instance.trackEvent('auto_launch', {
+                    'enabled': 'Crashed disabling',
+                  });
                 } finally {
+                  await store.setBool('launch', false);
                   item.setCheck(false);
                 }
               }
@@ -142,7 +183,7 @@ class MenuBarManager {
                 text:
                     '''Dart: ${FlutterVersion.dartVersion}
                     Flutter: ${FlutterVersion.version}
-                    Playful Version: 4.3.1-alpha
+                    Playful Version: ${packageInfo.version}-alpha
                     Author: Athanasios Taprantzis''',
                 alertStyle: AlertButtonStyle.ok,
                 iconStyle: IconStyle.information,

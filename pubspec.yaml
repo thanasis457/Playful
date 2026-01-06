@@ -41,6 +41,9 @@ dependencies:
   shared_preferences: ^2.5.4
   flutter_launcher_icons: ^0.14.4
   flutter_platform_alert: ^0.8.0
+  aptabase_flutter: ^0.4.1
+  package_info_plus: ^8.3.1
+  universal_io: ^2.3.1
 
 dev_dependencies:
   flutter_test:
