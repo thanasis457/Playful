@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:playful_dart/media_controller.dart';
 import 'package:playful_dart/media_listener.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -31,10 +33,15 @@ class Playful extends StatelessWidget {
 class MenuBarManager {
   static final AppWindow appWindow = AppWindow();
   static final SystemTray systemTray = SystemTray();
-  static final songLength = SongLength.short;
+  static SongLength songLength =
+      (store.getString('length') ?? 'short') == 'short'
+      ? SongLength.short
+      : SongLength.long;
+  static late final SharedPreferences store;
 
   /// Builds the menu bar options
   MenuBarManager() {
+    SharedPreferences.getInstance().then((prefs) => store = prefs);
     initMenuBar();
   }
 
@@ -60,8 +67,75 @@ class MenuBarManager {
         label: 'Open Spotify',
         onClicked: (menuItem) => openSpotify(),
       ),
+      SubMenu(
+        label: 'Options',
+        children: [
+          MenuItemCheckbox(
+            label: 'Launch at Login',
+            name: "launch",
+            checked: store.getBool('launch') ?? false,
+            onClicked: (item) async {
+              if ((store.getBool('launch') ?? false) == false) {
+                try {
+                  await enableLaunch(
+                    Platform.resolvedExecutable.replaceFirstMapped(
+                      RegExp(r'(.*?[^/]+?\.app)(\/.*)'),
+                      (match) => match.group(1)!,
+                    ),
+                  );
+                  await store.setBool('launch', true);
+                  item.setCheck(true);
+                } catch (e) {
+                  await store.setBool('launch', false);
+                  item.setCheck(false);
+                }
+              } else {
+                try {
+                  await disableLaunch();
+                  await store.setBool('launch', false);
+                } catch (e) {
+                  await store.setBool('launch', false);
+                } finally {
+                  item.setCheck(false);
+                }
+              }
+            },
+          ),
+          SubMenu(
+            label: "Text Length",
+            children: [
+              MenuItemCheckbox(
+                label: "Short",
+                name: "short_length",
+                checked: (store.getString("length") ?? "short") == "short",
+                onClicked: (item) async {
+                  await store.setString('length', 'short');
+                  songLength = SongLength.short;
+                  setTitle(MediaListener.currentSong);
+                  item.setCheck(true);
+                  (menu.findItemByName('long_length') as MenuItemCheckbox)
+                      .setCheck(false);
+                },
+              ),
+              MenuItemCheckbox(
+                label: "Long",
+                name: "long_length",
+                checked: (store.getString("length") ?? "short") == "long",
+                onClicked: (item) async {
+                  await store.setString('length', 'long');
+                  songLength = SongLength.long;
+                  setTitle(MediaListener.currentSong);
+                  item.setCheck(true);
+                  (menu.findItemByName('short_length') as MenuItemCheckbox)
+                      .setCheck(false);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
       MenuItemLabel(
-        label: 'Exit',
+        label: 'Quit',
         onClicked: (menuItem) async => await windowManager.destroy(),
       ),
     ]);

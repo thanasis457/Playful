@@ -57,24 +57,23 @@ Future<String> getState() async {
 }
 
 Future<void> enableLaunch(String appPath) async {
-  try {
-    await runAppleScript('compiledFunctions/launch.scpt "$appPath"');
-  } catch (e) {
-    print(e);
-  }
+  await runAppleScript('compiledFunctions/launch.scpt', args: [appPath]);
 }
 
 Future<void> disableLaunch() async {
-  try {
-    await runAppleScript('compiledFunctions/remove_launch.scpt');
-  } catch (e) {
-    print(e);
-  }
+  await runAppleScript('compiledFunctions/remove_launch.scpt');
 }
 
-Future<String> runAppleScript(String script) async {
+Future<String> runAppleScript(
+  String script, {
+  List<String> args = const [],
+  String? workingDirectory,
+}) async {
   final scriptPath = getResourcePath(script);
-  final result = await Process.run('osascript', [scriptPath]);
+  final result = await Process.run('osascript', [
+    scriptPath,
+    ...args,
+  ], workingDirectory: workingDirectory);
   final exitCode = result.exitCode;
   if (exitCode != 0) {
     throw Exception("Could not run AppleScript: ${result.stderr}");

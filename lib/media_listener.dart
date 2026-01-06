@@ -66,6 +66,7 @@ class MediaListener {
     isRunning().then((running) {
       if (running) {
         getCurrentSongOnce().then((Song song) {
+          currentSong = song;
           MenuBarManager.setTitle(song);
         });
       } else {
