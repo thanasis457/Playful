@@ -4,6 +4,7 @@ import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:playful_dart/main.dart';
+import 'package:playful_dart/media_controller.dart';
 
 typedef DartCallback =
     ffi.Void Function(
@@ -36,9 +37,8 @@ class MediaListener {
   static Song currentSong = Song.empty();
 
   /// Loads the library and starts listening for song changes
-  MediaListener.listen() {
+  Subscribe _getNativeSubscribe() {
     // Gets shared library
-    // Platform.resolvedExecutable
     final String libraryPath;
     if (kDebugMode) {
       libraryPath = path.join(
@@ -59,6 +59,20 @@ class MediaListener {
         .lookup<ffi.NativeFunction<SubscribeFunc>>('subscribe')
         .asFunction();
 
+    return subscribe;
+  }
+
+  MediaListener.listen() {
+    isRunning().then((running) {
+      if (running) {
+        getCurrentSongOnce().then((Song song) {
+          MenuBarManager.setTitle(song);
+        });
+      } else {
+        MenuBarManager.setTitle(Song("Open Spotify", '', ''));
+      }
+    });
+    final Subscribe subscribe = _getNativeSubscribe();
     // Calls the native function
     subscribe(
       ffi.NativeCallable<DartCallback>.listener(dartCallback).nativeFunction,
