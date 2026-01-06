@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:playful_dart/media_controller.dart';
 import 'package:playful_dart/media_listener.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 
 enum SongLength { long, short }
 
@@ -70,6 +72,37 @@ class MenuBarManager {
       SubMenu(
         label: 'Options',
         children: [
+          SubMenu(
+            label: "Text Length",
+            children: [
+              MenuItemCheckbox(
+                label: "Short",
+                name: "short_length",
+                checked: (store.getString("length") ?? "short") == "short",
+                onClicked: (item) async {
+                  await store.setString('length', 'short');
+                  songLength = SongLength.short;
+                  setTitle(MediaListener.currentSong);
+                  item.setCheck(true);
+                  (menu.findItemByName('long_length') as MenuItemCheckbox)
+                      .setCheck(false);
+                },
+              ),
+              MenuItemCheckbox(
+                label: "Long",
+                name: "long_length",
+                checked: (store.getString("length") ?? "short") == "long",
+                onClicked: (item) async {
+                  await store.setString('length', 'long');
+                  songLength = SongLength.long;
+                  setTitle(MediaListener.currentSong);
+                  item.setCheck(true);
+                  (menu.findItemByName('short_length') as MenuItemCheckbox)
+                      .setCheck(false);
+                },
+              ),
+            ],
+          ),
           MenuItemCheckbox(
             label: 'Launch at Login',
             name: "launch",
@@ -101,36 +134,20 @@ class MenuBarManager {
               }
             },
           ),
-          SubMenu(
-            label: "Text Length",
-            children: [
-              MenuItemCheckbox(
-                label: "Short",
-                name: "short_length",
-                checked: (store.getString("length") ?? "short") == "short",
-                onClicked: (item) async {
-                  await store.setString('length', 'short');
-                  songLength = SongLength.short;
-                  setTitle(MediaListener.currentSong);
-                  item.setCheck(true);
-                  (menu.findItemByName('long_length') as MenuItemCheckbox)
-                      .setCheck(false);
-                },
-              ),
-              MenuItemCheckbox(
-                label: "Long",
-                name: "long_length",
-                checked: (store.getString("length") ?? "short") == "long",
-                onClicked: (item) async {
-                  await store.setString('length', 'long');
-                  songLength = SongLength.long;
-                  setTitle(MediaListener.currentSong);
-                  item.setCheck(true);
-                  (menu.findItemByName('short_length') as MenuItemCheckbox)
-                      .setCheck(false);
-                },
-              ),
-            ],
+          MenuItemLabel(
+            label: "About",
+            onClicked: (item) async {
+              await FlutterPlatformAlert.showAlert(
+                windowTitle: 'Playful Information',
+                text:
+                    '''Dart: ${FlutterVersion.dartVersion}
+                    Flutter: ${FlutterVersion.version}
+                    Playful Version: 4.3.1-alpha
+                    Author: Athanasios Taprantzis''',
+                alertStyle: AlertButtonStyle.ok,
+                iconStyle: IconStyle.information,
+              );
+            },
           ),
         ],
       ),
