@@ -14,3 +14,6 @@ cp lib/swift/libMediaMiddleman.dylib macos/
 
 echo "Building app..."
 flutter build macos --release
+
+echo "Copying compiled AppleScripts into app bundle..."
+cp -r compiledFunctions build/macos/Build/Products/Release/playful_dart.app/Contents/Resources/
