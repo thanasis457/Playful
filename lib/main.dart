@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:playful_dart/media_controller.dart';
 import 'package:playful_dart/media_listener.dart';
-import 'dart:io' show exit;
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -12,7 +11,7 @@ void main() async {
   await windowManager.ensureInitialized();
   // Hide the initial window
   windowManager.close();
-  
+
   MenuBarManager();
   runApp(const Playful());
 
@@ -54,8 +53,17 @@ class MenuBarManager {
         label: 'Play / Pause',
         onClicked: (menuItem) => togglePlay(),
       ),
-      MenuItemLabel(label: 'Next', onClicked: (menuItem) => appWindow.hide()),
-      MenuItemLabel(label: 'Exit', onClicked: (menuItem) => exit(0)),
+      MenuItemLabel(label: 'Next', onClicked: (menuItem) => playNext()),
+      MenuItemLabel(label: 'Previous', onClicked: (menuItem) => playPrevious()),
+      MenuSeparator(),
+      MenuItemLabel(
+        label: 'Open Spotify',
+        onClicked: (menuItem) => openSpotify(),
+      ),
+      MenuItemLabel(
+        label: 'Exit',
+        onClicked: (menuItem) async => await windowManager.destroy(),
+      ),
     ]);
 
     await systemTray.setContextMenu(menu);
