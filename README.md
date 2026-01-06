@@ -2,7 +2,7 @@
 
 A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
-This branch is a reimplementation of the Playful app using [Flutter](https://flutter.dev/). This version is currently **experimental**. The app size and the memory footprint is substantially reduced compared to the main app( < 50%) but will remain experimental until all features are complete. 
+**This branch is a reimplementation of the Playful app using [Flutter](https://flutter.dev/).** This version is currently **experimental**. The app size and the memory footprint is **substantially reduced** compared to the main app(app size is down to 10% of original annd memory size down to 50%) but will remain experimental until all features are complete and tested.
 
 ## Screenshots
 <p align="center">
@@ -11,7 +11,7 @@ This branch is a reimplementation of the Playful app using [Flutter](https://flu
 
 ## Installing
 
-The easiest way to get running is to head to [Releases](https://github.com/thanasis457/Playful/releases) and download the **experimental** package version for your platform.
+The easiest way to get running is to head to [Releases](https://github.com/thanasis457/Playful/releases) and download the **alpha** version of the package for your platform.
 
 ## Building from source
 
@@ -29,10 +29,8 @@ You need to have installed on your system:
 
 ### Buidling a distributable
 
-If you want to make your own distributable version of the app (.app), 
-first follow the [instructions](https://docs.flutter.dev/platform-integration/macos/c-interop) on bundling dynamic libraries for Flutter apps. You should use the generated libraries found at `lib/swift`.
+If you want to make your own distributable version of the app (.app), run `./build.sh`. If you encounter issues with the app not finding the shared libraries first follow the [instructions](https://docs.flutter.dev/platform-integration/macos/c-interop) on bundling dynamic libraries for Flutter apps. You should use the generated libraries found at `lib/swift`.
 
-Next, run `flutter build macos --release`.
 The path to the compiled app will be shown at the end of the compilation.
 
 ### Testing
