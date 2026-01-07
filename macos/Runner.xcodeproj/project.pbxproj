@@ -28,12 +28,12 @@
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
-		C33323BE2F0A6DE20080E3B0 /* libMediaMiddleman.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C33323BC2F0A6DE20080E3B0 /* libMediaMiddleman.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		C33323BF2F0A6DE20080E3B0 /* libMediaSubscriber.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C33323BD2F0A6DE20080E3B0 /* libMediaSubscriber.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
-		C33323C02F0A6DEF0080E3B0 /* libMediaMiddleman.dylib in Resources */ = {isa = PBXBuildFile; fileRef = C33323BC2F0A6DE20080E3B0 /* libMediaMiddleman.dylib */; };
-		C33323C12F0A6DF10080E3B0 /* libMediaSubscriber.dylib in Resources */ = {isa = PBXBuildFile; fileRef = C33323BD2F0A6DE20080E3B0 /* libMediaSubscriber.dylib */; };
-		C33323C22F0A6E180080E3B0 /* libMediaMiddleman.dylib in Bundle Framework */ = {isa = PBXBuildFile; fileRef = C33323BC2F0A6DE20080E3B0 /* libMediaMiddleman.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		C33323C32F0A6E1A0080E3B0 /* libMediaSubscriber.dylib in Bundle Framework */ = {isa = PBXBuildFile; fileRef = C33323BD2F0A6DE20080E3B0 /* libMediaSubscriber.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C383C2AA2F0D79F700F771F6 /* libMediaMiddleman.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C383C2A82F0D79F700F771F6 /* libMediaMiddleman.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		C383C2AB2F0D79F700F771F6 /* libMediaSubscriber.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C383C2A92F0D79F700F771F6 /* libMediaSubscriber.dylib */; settings = {ATTRIBUTES = (Weak, ); }; };
+		C383C2AC2F0D7A1D00F771F6 /* libMediaMiddleman.dylib in Bundle Framework */ = {isa = PBXBuildFile; fileRef = C383C2A82F0D79F700F771F6 /* libMediaMiddleman.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C383C2AD2F0D7A1E00F771F6 /* libMediaSubscriber.dylib in Bundle Framework */ = {isa = PBXBuildFile; fileRef = C383C2A92F0D79F700F771F6 /* libMediaSubscriber.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C383C2AE2F0E470900F771F6 /* libMediaMiddleman.dylib in Resources */ = {isa = PBXBuildFile; fileRef = C383C2A82F0D79F700F771F6 /* libMediaMiddleman.dylib */; };
+		C383C2AF2F0E470900F771F6 /* libMediaSubscriber.dylib in Resources */ = {isa = PBXBuildFile; fileRef = C383C2A92F0D79F700F771F6 /* libMediaSubscriber.dylib */; };
 		F004E0D8613866B0674F3C32 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90D6190DCA148816F0D9A624 /* Pods_RunnerTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -61,8 +61,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				C33323C22F0A6E180080E3B0 /* libMediaMiddleman.dylib in Bundle Framework */,
-				C33323C32F0A6E1A0080E3B0 /* libMediaSubscriber.dylib in Bundle Framework */,
+				C383C2AC2F0D7A1D00F771F6 /* libMediaMiddleman.dylib in Bundle Framework */,
+				C383C2AD2F0D7A1E00F771F6 /* libMediaSubscriber.dylib in Bundle Framework */,
 			);
 			name = "Bundle Framework";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -96,8 +96,8 @@
 		A4949B1AF6B6F49AD8CE4B92 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		AF48264B9BD3BD5602FCD71F /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		BD8E6343FE21E3AD462E30DC /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		C33323BC2F0A6DE20080E3B0 /* libMediaMiddleman.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libMediaMiddleman.dylib; sourceTree = "<group>"; };
-		C33323BD2F0A6DE20080E3B0 /* libMediaSubscriber.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libMediaSubscriber.dylib; sourceTree = "<group>"; };
+		C383C2A82F0D79F700F771F6 /* libMediaMiddleman.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libMediaMiddleman.dylib; sourceTree = "<group>"; };
+		C383C2A92F0D79F700F771F6 /* libMediaSubscriber.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libMediaSubscriber.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,8 +113,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C33323BE2F0A6DE20080E3B0 /* libMediaMiddleman.dylib in Frameworks */,
-				C33323BF2F0A6DE20080E3B0 /* libMediaSubscriber.dylib in Frameworks */,
+				C383C2AA2F0D79F700F771F6 /* libMediaMiddleman.dylib in Frameworks */,
+				C383C2AB2F0D79F700F771F6 /* libMediaSubscriber.dylib in Frameworks */,
 				0ED49420738D5FB11E9805C5 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -213,8 +213,8 @@
 		D73912EC22F37F3D000D13A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C33323BC2F0A6DE20080E3B0 /* libMediaMiddleman.dylib */,
-				C33323BD2F0A6DE20080E3B0 /* libMediaSubscriber.dylib */,
+				C383C2A82F0D79F700F771F6 /* libMediaMiddleman.dylib */,
+				C383C2A92F0D79F700F771F6 /* libMediaSubscriber.dylib */,
 				BD8E6343FE21E3AD462E30DC /* Pods_Runner.framework */,
 				90D6190DCA148816F0D9A624 /* Pods_RunnerTests.framework */,
 			);
@@ -327,9 +327,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C383C2AE2F0E470900F771F6 /* libMediaMiddleman.dylib in Resources */,
+				C383C2AF2F0E470900F771F6 /* libMediaSubscriber.dylib in Resources */,
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
-				C33323C12F0A6DF10080E3B0 /* libMediaSubscriber.dylib in Resources */,
-				C33323C02F0A6DEF0080E3B0 /* libMediaMiddleman.dylib in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -753,7 +753,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
 			buildSettings = {
-				ARCHS = arm64;
+				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;

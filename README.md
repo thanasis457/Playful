@@ -2,7 +2,7 @@
 
 A simple, clean, MacOS application that displays the current song on the Menu Bar. Works only with Spotify.
 
-**This branch is a reimplementation of the Playful app using [Flutter](https://flutter.dev/).** This version is currently **experimental**. The app size and the memory footprint is **substantially reduced** compared to the main app (app size is down to 10% of original annd memory size down to 50%) but will remain experimental until all features are complete and tested.
+**This branch is a reimplementation of the Playful app using [Flutter](https://flutter.dev/).** This version is currently **experimental**. The app size and the memory footprint is **substantially reduced** compared to the main app (app size is down to 10% of original annd memory usage down to 50%) but will remain experimental until all features are complete and tested.
 
 ## Screenshots
 <p align="center">
