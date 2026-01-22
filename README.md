@@ -23,7 +23,7 @@ You need to have installed on your system:
 ### Steps to run from source:
 
 1. `git clone https://github.com/thanasis457/Playful`
-2. `git checkout -b Playful-Flutter`
+2. `git checkout -b playful-experimental`
 3. `flutter pub get`
 4. `./run.sh`
 
